@@ -11,4 +11,4 @@ public:
     void terminate();
 };
 
-#endif // XDLX_TELEMETRY_
+#endif // XDLX_TELEMETRY_H
