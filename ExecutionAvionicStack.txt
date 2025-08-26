@@ -1,0 +1,421 @@
+Executing Formation Sequence...
+Executing Formation Sequence...
+Packet Frame formation started.
+Found .json file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.json"
+Processing folder: Capture/Acq000060_30542310032025
+Found .meta file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta"
+CCSDS Process Status is enabled. Processing files in folder: "Capture/Acq000060_30542310032025"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band02"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band12"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band22"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band30"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band31"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band42"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band52"
+Performing packetization for file: "Capture/Acq000060_30542310032025/Acq000060_30542310032025.band62"
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band02 With filesize: 139265280
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 2
+PacketSize before secondaryHeader: 21120 for APID: 2
+PacketSize after secondaryHeader: 23411 for APID: 2
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band12 With filesize: 139265280
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 12
+PacketSize before secondaryHeader: 21120 for APID: 12
+PacketSize after secondaryHeader: 23411 for APID: 12
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band42 With filesize: 139265280
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 42
+PacketSize before secondaryHeader: 21120 for APID: 42
+PacketSize after secondaryHeader: 23411 for APID: 42
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band62 With filesize: 139265280
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 62
+PacketSize before secondaryHeader: 21120 for APID: 62
+PacketSize after secondaryHeader: 23411 for APID: 62
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band52 With filesize: 139265280
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 52
+PacketSize before secondaryHeader: 21120 for APID: 52
+PacketSize after secondaryHeader: 23411 for APID: 52
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band22 With filesize: 139265280
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 22
+PacketSize before secondaryHeader: 21120 for APID: 22
+PacketSize after secondaryHeader: 23411 for APID: 22
+Buffer size allocated: 154411698 for APID: 2
+Buffer size allocated: 154411698 for APID: 12
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band31 With filesize: 278530560
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 31
+PacketSize before secondaryHeader: 21120 for APID: 31
+PacketSize after secondaryHeader: 23411 for APID: 31
+Total Packets: 6594 | Buffer Size: 154411698 for APID: 2
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.band30 With filesize: 278530560
+Buffer size allocated: 154411698 for APID: 42
+Buffer size allocated: 154411698 for APID: 62
+File read successful: Capture/Acq000060_30542310032025/Acq000060_30542310032025.meta With filesize: 1226484
+Lines per packet is: 4 for APID: 30
+PacketSize before secondaryHeader: 21120 for APID: 30
+PacketSize after secondaryHeader: 23411 for APID: 30
+Total Packets: 6594 | Buffer Size: 154411698 for APID: 12
+Buffer size allocated: 154411698 for APID: 22
+Buffer size allocated: 154411698 for APID: 52
+Total Packets: 6594 | Buffer Size: 154411698 for APID: 22
+Total Packets: 6594 | Buffer Size: 154411698 for APID: 42
+Total Packets: 6594 | Buffer Size: 154411698 for APID: 62
+Total Packets: 6594 | Buffer Size: 154411698 for APID: 52
+Buffer size allocated: 308823396 for APID: 30
+Buffer size allocated: 308823396 for APID: 31
+Total Packets: 13188 | Buffer Size: 308823396 for APID: 30
+Total Packets: 13188 | Buffer Size: 308823396 for APID: 31
+Packetization completed.
+Frames are being written to file: "XDLX_KYFG_V6_simulation/StageFolder/Acq000060_30542310032025.stream1"
+Found packet buffer for: .band02
+Writing initial Idle Frames: 2 for packet buffer: .band02
+Writing data frames from packet buffer: .band02
+All data processed successfully.
+Found packet buffer for: .band12
+Writing initial Idle Frames: 2 for packet buffer: .band12
+Writing data frames from packet buffer: .band12
+All data processed successfully.
+Found packet buffer for: .band22
+Writing initial Idle Frames: 2 for packet buffer: .band22
+Writing data frames from packet buffer: .band22
+All data processed successfully.
+Found packet buffer for: .band30
+Writing initial Idle Frames: 2 for packet buffer: .band30
+Writing data frames from packet buffer: .band30
+All data processed successfully.
+Writing End Idle Frames:
+Frames are being written to file: "XDLX_KYFG_V6_simulation/StageFolder/Acq000060_30542310032025.stream2"
+Found packet buffer for: .band31
+Writing initial Idle Frames: 2 for packet buffer: .band31
+Writing data frames from packet buffer: .band31
+All data processed successfully.
+Found packet buffer for: .band42
+Writing initial Idle Frames: 2 for packet buffer: .band42
+Writing data frames from packet buffer: .band42
+All data processed successfully.
+Found packet buffer for: .band52
+Writing initial Idle Frames: 2 for packet buffer: .band52
+Writing data frames from packet buffer: .band52
+All data processed successfully.
+Found packet buffer for: .band62
+Writing initial Idle Frames: 2 for packet buffer: .band62
+Writing data frames from packet buffer: .band62
+All data processed successfully.
+Writing End Idle Frames:
+Found .json file: "Capture/Acq000061_30542310032025/Acq000061_30542310032025.json"
+Processing folder: Capture/Acq000061_30542310032025
+Found .meta file: "Capture/Acq000061_30542310032025/Acq000061_30542310032025.meta"
+CCSDS Process Status is disabled. Skipping packetization and frame formation for folder: "Capture/Acq000061_30542310032025"
+Initial buffer size allocated: 2027520 for log and meta data.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.meta With filesize: 1226484
+[E107] Error: File not found: Capture/Acq000061_30542310032025/Acq000061_30542310032025.log
+[E102] No log data found in the file: "Capture/Acq000061_30542310032025/Acq000061_30542310032025.log"
+Meta data size: 1226484
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band02 With filesize: 139265280
+Writing data for APID: 2(.band02) to stream1.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band12 With filesize: 139265280
+Writing data for APID: 12(.band12) to stream1.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band22 With filesize: 139265280
+Writing data for APID: 22(.band22) to stream1.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band30 With filesize: 278530560
+Writing data for APID: 30(.band30) to stream1.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band31 With filesize: 278530560
+Writing data for APID: 31(.band31) to stream2.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band42 With filesize: 139265280
+Writing data for APID: 42(.band42) to stream2.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band52 With filesize: 139265280
+Writing data for APID: 52(.band52) to stream2.
+File read successful: Capture/Acq000061_30542310032025/Acq000061_30542310032025.band62 With filesize: 139265280
+Writing data for APID: 62(.band62) to stream2.
+Non-CCSDS files processed and written to: "XDLX_KYFG_V6_simulation/StageFolder/Acq000061_30542310032025.stream1" and "XDLX_KYFG_V6_simulation/StageFolder/Acq000061_30542310032025.stream2"
+Found .json file: "Capture/Acq000059_30542310032025/Acq000059_30542310032025.json"
+Processing folder: Capture/Acq000059_30542310032025
+Found .meta file: "Capture/Acq000059_30542310032025/Acq000059_30542310032025.meta"
+CCSDS Process Status is disabled. Skipping packetization and frame formation for folder: "Capture/Acq000059_30542310032025"
+Initial buffer size allocated: 2027520 for log and meta data.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.meta With filesize: 601524
+[E107] Error: File not found: Capture/Acq000059_30542310032025/Acq000059_30542310032025.log
+[E102] No log data found in the file: "Capture/Acq000059_30542310032025/Acq000059_30542310032025.log"
+Meta data size: 601524
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band02 With filesize: 136604160
+Writing data for APID: 2(.band02) to stream1.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band12 With filesize: 136604160
+Writing data for APID: 12(.band12) to stream1.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band22 With filesize: 136604160
+Writing data for APID: 22(.band22) to stream1.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band30 With filesize: 273208320
+Writing data for APID: 30(.band30) to stream1.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band31 With filesize: 273208320
+Writing data for APID: 31(.band31) to stream2.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band42 With filesize: 136604160
+Writing data for APID: 42(.band42) to stream2.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band52 With filesize: 136604160
+Writing data for APID: 52(.band52) to stream2.
+File read successful: Capture/Acq000059_30542310032025/Acq000059_30542310032025.band62 With filesize: 136604160
+Writing data for APID: 62(.band62) to stream2.
+Non-CCSDS files processed and written to: "XDLX_KYFG_V6_simulation/StageFolder/Acq000059_30542310032025.stream1" and "XDLX_KYFG_V6_simulation/StageFolder/Acq000059_30542310032025.stream2"
+Found .json file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.json"
+Processing folder: Capture/Acq000056_30542310032025
+Found .meta file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta"
+CCSDS Process Status is enabled. Processing files in folder: "Capture/Acq000056_30542310032025"
+Performing packetization for file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.band02"
+Performing packetization for file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.band12"
+Performing packetization for file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.band22"
+Performing packetization for file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.band30"
+Performing packetization for file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.band31"
+Performing packetization for file: Performing packetization for file: Performing packetization for file: "Capture/Acq000056_30542310032025/Acq000056_30542310032025.band52""Capture/Acq000056_30542310032025/Acq000056_30542310032025.band42"
+"Capture/Acq000056_30542310032025/Acq000056_30542310032025.band62"
+
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band22 With filesize: 132802560
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 22
+PacketSize before secondaryHeader: 21120 for APID: 22
+PacketSize after secondaryHeader: 23410 for APID: 22
+Buffer size allocated: 147239808 for APID: 22
+Total Packets: 6288 | Buffer Size: 147239808 for APID: 22
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band12 With filesize: 132802560
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 12
+PacketSize before secondaryHeader: 21120 for APID: 12
+PacketSize after secondaryHeader: 23410 for APID: 12
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band52 With filesize: 132802560
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 52
+PacketSize before secondaryHeader: 21120 for APID: 52
+PacketSize after secondaryHeader: 23410 for APID: 52
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band62 With filesize: 132802560
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 62
+PacketSize before secondaryHeader: 21120 for APID: 62
+PacketSize after secondaryHeader: 23410 for APID: 62
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band02 With filesize: 132802560
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 2
+PacketSize before secondaryHeader: 21120 for APID: 2
+PacketSize after secondaryHeader: 23410 for APID: 2
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band42 With filesize: 132802560
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 42
+PacketSize before secondaryHeader: 21120 for APID: 42
+PacketSize after secondaryHeader: 23410 for APID: 42
+Buffer size allocated: 147239808 for APID: 12
+Buffer size allocated: 147239808 for APID: 2
+Buffer size allocated: 147239808 for APID: 42
+Buffer size allocated: 147239808 for APID: 52
+Buffer size allocated: 147239808 for APID: 62
+Total Packets: 6288 | Buffer Size: 147239808 for APID: 2
+Total Packets: 6288 | Buffer Size: 147239808 for APID: 42
+Total Packets: 6288 | Buffer Size: 147239808 for APID: 12
+Total Packets: 6288 | Buffer Size: 147239808 for APID: 62
+Total Packets: 6288 | Buffer Size: 147239808 for APID: 52
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band31 With filesize: 265605120
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 31
+PacketSize before secondaryHeader: 21120 for APID: 31
+PacketSize after secondaryHeader: 23410 for APID: 31
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.band30 With filesize: 265605120
+File read successful: Capture/Acq000056_30542310032025/Acq000056_30542310032025.meta With filesize: 146196
+Lines per packet is: 4 for APID: 30
+PacketSize before secondaryHeader: 21120 for APID: 30
+PacketSize after secondaryHeader: 23410 for APID: 30
+Buffer size allocated: 294479616 for APID: 31
+Buffer size allocated: 294479616 for APID: 30
+Total Packets: 12576 | Buffer Size: 294479616 for APID: 31
+Total Packets: 12576 | Buffer Size: 294479616 for APID: 30
+Packetization completed.
+Frames are being written to file: "XDLX_KYFG_V6_simulation/StageFolder/Acq000056_30542310032025.stream1"
+Found packet buffer for: .band02
+Writing initial Idle Frames: 2 for packet buffer: .band02
+Writing data frames from packet buffer: .band02
+All data processed successfully.
+Found packet buffer for: .band12
+Writing initial Idle Frames: 2 for packet buffer: .band12
+Writing data frames from packet buffer: .band12
+All data processed successfully.
+Found packet buffer for: .band22
+Writing initial Idle Frames: 2 for packet buffer: .band22
+Writing data frames from packet buffer: .band22
+All data processed successfully.
+Found packet buffer for: .band30
+Writing initial Idle Frames: 2 for packet buffer: .band30
+Writing data frames from packet buffer: .band30
+All data processed successfully.
+Writing End Idle Frames:
+Frames are being written to file: "XDLX_KYFG_V6_simulation/StageFolder/Acq000056_30542310032025.stream2"
+Found packet buffer for: .band31
+Writing initial Idle Frames: 2 for packet buffer: .band31
+Writing data frames from packet buffer: .band31
+All data processed successfully.
+Found packet buffer for: .band42
+Writing initial Idle Frames: 2 for packet buffer: .band42
+Writing data frames from packet buffer: .band42
+All data processed successfully.
+Found packet buffer for: .band52
+Writing initial Idle Frames: 2 for packet buffer: .band52
+Writing data frames from packet buffer: .band52
+All data processed successfully.
+Found packet buffer for: .band62
+Writing initial Idle Frames: 2 for packet buffer: .band62
+Writing data frames from packet buffer: .band62
+All data processed successfully.
+Writing End Idle Frames:
+Found .json file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.json"
+Processing folder: Capture/Acq000058_30542310032025
+Found .meta file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta"
+CCSDS Process Status is enabled. Processing files in folder: "Capture/Acq000058_30542310032025"
+Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.band02"
+Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.band12"
+Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.band22"
+Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.ba 	nd30"
+Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.band52"
+Performing packetization for file: Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.band42"
+"Capture/Acq000058_30542310032025/Acq000058_30542310032025.band31"Performing packetization for file: "Capture/Acq000058_30542310032025/Acq000058_30542310032025.band62"
+
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band22 With filesize: 136604160
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 22
+PacketSize before secondaryHeader: 21120 for APID: 22
+PacketSize after secondaryHeader: 23410 for APID: 22
+Buffer size allocated: 151454688 for APID: 22
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band12 With filesize: 136604160
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 12
+PacketSize before secondaryHeader: File read successful: 21120 for APID: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band02 With filesize: 12136604160
+
+PacketSize after secondaryHeader: 23410 for APID: 12
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 2
+PacketSize before secondaryHeader: 21120 for APID: 2
+PacketSize after secondaryHeader: 23410 for APID: 2
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band42 With filesize: 136604160
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 42
+PacketSize before secondaryHeader: 21120 for APID: 42
+PacketSize after secondaryHeader: 23410 for APID: 42
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band52 With filesize: 136604160
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 52
+PacketSize before secondaryHeader: 21120 for APID: 52
+PacketSize after secondaryHeader: 23410 for APID: 52
+Total Packets: 6468 | Buffer Size: 151454688 for APID: 22
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band62 With filesize: 136604160
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 62
+PacketSize before secondaryHeader: 21120 for APID: 62
+PacketSize after secondaryHeader: 23410 for APID: 62
+Buffer size allocated: 151454688 for APID: 12
+Total Packets: 6468 | Buffer Size: 151454688 for APID: 12
+Buffer size allocated: 151454688 for APID: 42
+Buffer size allocated: 151454688 for APID: 62
+Buffer size allocated: 151454688 for APID: 52
+Buffer size allocated: 151454688 for APID: 2
+Total Packets: 6468 | Buffer Size: 151454688 for APID: 62
+Total Packets: 6468 | Buffer Size: 151454688 for APID: 52
+Total Packets: 6468 | Buffer Size: 151454688 for APID: 42
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band31 With filesize: 273208320
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 31
+PacketSize before secondaryHeader: 21120 for APID: 31
+PacketSize after secondaryHeader: 23410 for APID: 31
+Total Packets: 6468 | Buffer Size: 151454688 for APID: 2
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.band30 With filesize: 273208320
+File read successful: Capture/Acq000058_30542310032025/Acq000058_30542310032025.meta With filesize: 601524
+Lines per packet is: 4 for APID: 30
+PacketSize before secondaryHeader: 21120 for APID: 30
+PacketSize after secondaryHeader: 23410 for APID: 30
+Buffer size allocated: 302909376 for APID: 31
+Buffer size allocated: 302909376 for APID: 30
+Total Packets: 12936 | Buffer Size: 302909376 for APID: 31
+Total Packets: 12936 | Buffer Size: 302909376 for APID: 30
+Packetization completed.
+Frames are being written to file: "XDLX_KYFG_V6_simulation/StageFolder/Acq000058_30542310032025.stream1"
+Found packet buffer for: .band02
+Writing initial Idle Frames: 2 for packet buffer: .band02
+Writing data frames from packet buffer: .band02
+All data processed successfully.
+Found packet buffer for: .band12
+Writing initial Idle Frames: 2 for packet buffer: .band12
+Writing data frames from packet buffer: .band12
+All data processed successfully.
+Found packet buffer for: .band22
+Writing initial Idle Frames: 2 for packet buffer: .band22
+Writing data frames from packet buffer: .band22
+All data processed successfully.
+Found packet buffer for: .band30
+Writing initial Idle Frames: 2 for packet buffer: .band30
+Writing data frames from packet buffer: .band30
+All data processed successfully.
+Writing End Idle Frames:
+Frames are being written to file: "XDLX_KYFG_V6_simulation/StageFolder/Acq000058_30542310032025.stream2"
+Found packet buffer for: .band31
+Writing initial Idle Frames: 2 for packet buffer: .band31
+Writing data frames from packet buffer: .band31
+All data processed successfully.
+Found packet buffer for: .band42
+Writing initial Idle Frames: 2 for packet buffer: .band42
+Writing data frames from packet buffer: .band42
+All data processed successfully.
+Found packet buffer for: .band52
+Writing initial Idle Frames: 2 for packet buffer: .band52
+Writing data frames from packet buffer: .band52
+All data processed successfully.
+Found packet buffer for: .band62
+Writing initial Idle Frames: 2 for packet buffer: .band62
+Writing data frames from packet buffer: .band62
+All data processed successfully.
+Writing End Idle Frames:
+Found .json file: "Capture/Acq000057_30542310032025/Acq000057_30542310032025.json"
+Processing folder: Capture/Acq000057_30542310032025
+Found .meta file: "Capture/Acq000057_30542310032025/Acq000057_30542310032025.meta"
+CCSDS Process Status is disabled. Skipping packetization and frame formation for folder: "Capture/Acq000057_30542310032025"
+Initial buffer size allocated: 2027520 for log and meta data.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.meta With filesize: 146196
+[E107] Error: File not found: Capture/Acq000057_30542310032025/Acq000057_30542310032025.log
+[E102] No log data found in the file: "Capture/Acq000057_30542310032025/Acq000057_30542310032025.log"
+Meta data size: 146196
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band02 With filesize: 132802560
+Writing data for APID: 2(.band02) to stream1.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band12 With filesize: 132802560
+Writing data for APID: 12(.band12) to stream1.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band22 With filesize: 132802560
+Writing data for APID: 22(.band22) to stream1.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band30 With filesize: 265605120
+Writing data for APID: 30(.band30) to stream1.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band31 With filesize: 265605120
+Writing data for APID: 31(.band31) to stream2.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band42 With filesize: 132802560
+Writing data for APID: 42(.band42) to stream2.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band52 With filesize: 132802560
+Writing data for APID: 52(.band52) to stream2.
+File read successful: Capture/Acq000057_30542310032025/Acq000057_30542310032025.band62 With filesize: 132802560
+Writing data for APID: 62(.band62) to stream2.
+Non-CCSDS files processed and written to: "XDLX_KYFG_V6_simulation/StageFolder/Acq000057_30542310032025.stream1" and "XDLX_KYFG_V6_simulation/StageFolder/Acq000057_30542310032025.stream2"
+Total Time took for Packetization and Frame Formation: 11.2195
+2
+Invalid command. Please enter 100 or 102.
+payload@payload-xdlinx:~/XDLX_KYFG_V6_simulation$ cd ..
+payload@payload-xdlinx:~$ sudo cgostest 
+
+Starting CGOS I2C Test...
+Reset SEQ:
+RESET sequence Trigger successfully.
+SET SEQ:
+SET sequence Trigger successfully.
+CGOS I2C Test complete.
+
+payload@payload-xdlinx:~$ sudo cgostest 
+
+Starting CGOS I2C Test...
+Reset SEQ:
+RESET sequence Trigger successfully.
+SET SEQ:
+SET sequence Trigger successfully.
+CGOS I2C Test complete.
+
+payload@payload-xdlinx:~$ 
+
+

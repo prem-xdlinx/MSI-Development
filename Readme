@@ -1,0 +1,14 @@
+This Version of code contains The telemetry send to SatOs.
+1) Software Firmware Status, ---> 16bits = Software Version  ----> 16bits = Firmware Version
+2) Device Status,   ----> 16bits = Duration   -----> 16bits = Device Status
+3) Sensor Temparature,
+4) Device Temperature,
+5) Camera Status --- >  16bits = Grabber Status --->14bits = FramesCaptured(0-16383) ------->  2bits = CameraStatus( 0 = Fault, 1 = Ready, 2 = Waiting, 3 = Capturing)
+6) Storage Status ---->  16bits = Seconds Counter -----> 14bits = StorageStatus(0-16383)  ----> 2bits = Payload SeqID  
+7) Voltage
+
+---> It stores Ephemeris data after 56 bytes of metadata.
+---> Removed .Raw mode and introduced Non-CCSDS Mode.
+---> Added firmware version in hardware info
+---> Packs Device Temp and Sensor Temp at Parameters place. 
+----> Introduced flag MASIAPP to track sigseg logging

@@ -1,0 +1,1501 @@
+/*
+ * Copyright 2022 Antaris, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <pthread.h>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <string>
+#include <vector>
+#include <map>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <cstring>
+#include <time.h>
+
+#include <libssh2.h>
+#include <ctime>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sstream>
+#include <algorithm>
+
+#include "antaris_api.h"
+#include "antaris_api_gpio.h"
+#include "antaris_api_pyfunctions.h"
+#include "antaris_can_api.h"
+
+
+#include "antaris_api_parser.h"
+#include "antaris_api_i2c.h"
+
+#include <filesystem>
+#include <unistd.h>
+#include <mutex>
+#include <thread>
+
+/// @brief  Dependencies for MSI Application
+#include "XDLX_CamApp_V6.h"
+#include "sharedParams.h"
+//////////////////////////////////////////////
+
+
+/// @brief Dependencies for Formation of data
+#include "XDLX_Pack.h"
+///////////////////////////////////////////
+
+// #ifdef EPHIMIRUS_ARRAY
+    std::vector<AdcsEphemerisData> gnss_eph_data_history;
+// #else
+    GnssEphData latest_gnss_eph_data;
+    bool storeData = true; // Flag to indicate if data should be stored
+    double epsVoltage = 0.0; // Variable to store EPS voltage
+// #endif
+
+#define MAX_STR_LEN 256
+#define SEQ_PARAMS_LEN 64
+#define SEQ_NAME_LEN   32
+
+#define Capture_ID                   "Capture"
+#define Capture_IDX                  0
+#define Format_ID                  "Format"
+#define Format_IDX                 1
+#define LogLocation_ID                  "LogLocation"
+#define LogLocation_IDX                 2
+#define TestGPIO_Sequence_ID            "TestGPIO"
+#define TestGPIO_Sequence_IDX           3
+#define StageFile_Sequence_ID           "StageFile"
+#define StageFile_Sequence_IDX          4
+#define TestCANBus_Sequence_ID          "TestCANBus"
+#define TestCANBus_Sequence_IDX         5
+#define EpsVoltageTelemetry_ID          "EpsVoltageTm"
+#define EpsVoltageTelemetry_IDX         6
+#define GnssDataTelemetry_ID            "Edge"
+#define GnssDataTelemetry_IDX           7
+#define SEQUENCE_ID_MAX                 8
+
+#define APP_STATE_ACTIVE                0  // Application State : Good (0), Error (non-Zero)
+
+#define STAGE_FILE_DOWNLOAD_DIR         "/opt/antaris/outbound/"    // path for staged file download
+#define STAGE_FILE_NAME                 "SampleFile.txt"            // name of staged file
+#define MAX_DATA_BYTES 8
+#define SEND_MSG_LIMIT 10
+std::string InboundPath = "/opt/antaris/inbound/";
+std::string ConfigPath = "/opt/antaris/user/ConfigData/";
+std::string capturesDirectory = "/opt/antaris/user/Capture/";
+std::filesystem::path StageFolder = "/opt/antaris/outbound/";
+std::string userDirectory = "/opt/antaris/user/";
+
+/*
+ * Following counters should be incremented whenever
+ * a reqeust/response (to PC) API hits error
+ */
+unsigned short reqs_to_pc_in_err_cnt = 0;
+unsigned short resps_to_pc_in_err_cnt = 0;
+// Global variable to record application state
+unsigned short application_state = APP_STATE_ACTIVE;	
+static unsigned int debug = 0;
+static int shutdown_requested = 0;
+// Global variable channel
+AntarisChannel channel;
+
+struct mythreadState_s;
+
+typedef void (*fsm_entry_fn_t)(struct mythreadState_s *);
+
+typedef struct mythreadState_s {
+    unsigned short int      correlation_id;
+    char                    state[MAX_STR_LEN];
+    char                    seq_id[32];
+    char                    received_name[MAX_STR_LEN];
+    char                    seq_params[SEQ_PARAMS_LEN];
+    unsigned long           scheduled_deadline;	//timestamp by when this sequence should be over
+    unsigned int            counter;
+    pthread_cond_t          condition;
+    pthread_mutex_t         cond_lock;
+    AntarisChannel          channel;
+    pthread_t               thread_id;
+    fsm_entry_fn_t          entry_fn;
+} mythreadState_t;
+
+
+////////////////////////////////////////////////////////////////////////////////////
+int ExecuteSSHPS(const char *command)
+{
+
+    const char *host = "192.168.1.113";//169.254.20.1
+    const char *username = "payload";
+    const char *password = "Xdlinx@123";
+    // Initialize libssh2
+    if (libssh2_init(0) != 0) {
+        std::cerr << "libssh2 initialization failed" << std::endl;
+        return -1;
+    }
+
+    // Create socket
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == -1) {
+        std::cerr << "Socket creation failed" << std::endl;
+        return -1;
+    }
+
+    // Set up server address
+    sockaddr_in sin;
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(22);
+    sin.sin_addr.s_addr = inet_addr(host);
+
+    if (connect(sock, (struct sockaddr*)(&sin), sizeof(sockaddr_in)) != 0) {
+        std::cerr << "Connection to " << host << " failed" << std::endl;
+        close(sock);
+        return -1;
+    }
+
+    // Create SSH session
+    LIBSSH2_SESSION *session = libssh2_session_init();
+    if (!session) {
+        std::cerr << "Session init failed" << std::endl;
+        close(sock);
+        return -1;
+    }
+
+    // Start session
+    if (libssh2_session_startup(session, sock)) {
+        std::cerr << "Session startup failed" << std::endl;
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Authenticate
+    if (libssh2_userauth_password(session, username, password)) {
+        std::cerr << "Authentication failed" << std::endl;
+        libssh2_session_disconnect(session, "Bye");
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Open a channel
+    LIBSSH2_CHANNEL *channel = libssh2_channel_open_session(session);
+    if (!channel) {
+        std::cerr << "Channel opening failed" << std::endl;
+        libssh2_session_disconnect(session, "Bye");
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Execute command
+    if (libssh2_channel_exec(channel, command)) {
+        std::cerr << "Command execution failed" << std::endl;
+        libssh2_channel_free(channel);
+        libssh2_session_disconnect(session, "Bye");
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Read all stdout and stderr output
+    char buffer[1024];
+    ssize_t n;
+    while ((n = libssh2_channel_read(channel, buffer, sizeof(buffer))) > 0) {
+        std::cout.write(buffer, n);
+        std::cout.flush();
+    }
+
+    // Also read stderr if needed
+    while ((n = libssh2_channel_read_stderr(channel, buffer, sizeof(buffer))) > 0) {
+        std::cerr.write(buffer, n);
+        std::cerr.flush();
+    }
+
+    // Wait for remote command to finish
+    libssh2_channel_send_eof(channel);
+    libssh2_channel_wait_eof(channel);
+    libssh2_channel_wait_closed(channel);
+    libssh2_channel_free(channel);
+
+    // Clean up
+    libssh2_session_disconnect(session, "Normal Shutdown");
+    libssh2_session_free(session);
+    libssh2_exit();
+    close(sock);
+
+    return 0;
+}
+int ExecuteSSHES(const char *command)
+{
+
+    const char *host = "192.168.1.114";
+    const char *username = "edge";
+    const char *password = "Xdlinx@123";
+    // Initialize libssh2
+    if (libssh2_init(0) != 0) {
+        std::cerr << "libssh2 initialization failed" << std::endl;
+        return -1;
+    }
+
+    // Create socket
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == -1) {
+        std::cerr << "Socket creation failed" << std::endl;
+        return -1;
+    }
+
+    // Set up server address
+    sockaddr_in sin;
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(22);
+    sin.sin_addr.s_addr = inet_addr(host);
+
+    if (connect(sock, (struct sockaddr*)(&sin), sizeof(sockaddr_in)) != 0) {
+        std::cerr << "Connection to " << host << " failed" << std::endl;
+        close(sock);
+        return -1;
+    }
+
+    // Create SSH session
+    LIBSSH2_SESSION *session = libssh2_session_init();
+    if (!session) {
+        std::cerr << "Session init failed" << std::endl;
+        close(sock);
+        return -1;
+    }
+
+    // Start session
+    if (libssh2_session_startup(session, sock)) {
+        std::cerr << "Session startup failed" << std::endl;
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Authenticate
+    if (libssh2_userauth_password(session, username, password)) {
+        std::cerr << "Authentication failed" << std::endl;
+        libssh2_session_disconnect(session, "Bye");
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Open a channel
+    LIBSSH2_CHANNEL *channel = libssh2_channel_open_session(session);
+    if (!channel) {
+        std::cerr << "Channel opening failed" << std::endl;
+        libssh2_session_disconnect(session, "Bye");
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Execute command
+    if (libssh2_channel_exec(channel, command)) {
+        std::cerr << "Command execution failed" << std::endl;
+        libssh2_channel_free(channel);
+        libssh2_session_disconnect(session, "Bye");
+        libssh2_session_free(session);
+        close(sock);
+        return -1;
+    }
+
+    // Read all stdout and stderr output
+    char buffer[1024];
+    ssize_t n;
+    while ((n = libssh2_channel_read(channel, buffer, sizeof(buffer))) > 0) {
+        std::cout.write(buffer, n);
+        std::cout.flush();
+    }
+
+    // Also read stderr if needed
+    while ((n = libssh2_channel_read_stderr(channel, buffer, sizeof(buffer))) > 0) {
+        std::cerr.write(buffer, n);
+        std::cerr.flush();
+    }
+
+    // Wait for remote command to finish
+    libssh2_channel_send_eof(channel);
+    libssh2_channel_wait_eof(channel);
+    libssh2_channel_wait_closed(channel);
+    libssh2_channel_free(channel);
+
+    // Clean up
+    libssh2_session_disconnect(session, "Normal Shutdown");
+    libssh2_session_free(session);
+    libssh2_exit();
+    close(sock);
+
+    return 0;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+int Invoke_update_config_file()
+{
+	// char command_buffer[512];
+	
+    // snprintf(command_buffer, sizeof(command_buffer), "./update.sh");
+    // ExecuteSSHPS(command_buffer);
+
+
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(InboundPath)) {
+            if (std::filesystem::is_regular_file(entry)) {
+                std::filesystem::path srcFile = entry.path();
+                std::filesystem::path destFile = ConfigPath + srcFile.filename().string();
+
+                std::filesystem::copy_file(srcFile, destFile, std::filesystem::copy_options::overwrite_existing);
+                std::cout << "Copied: " << srcFile << " -> " << destFile << '\n';
+                std::filesystem::remove(srcFile);
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << '\n';
+        return 1;
+    } catch (const std::exception& e) {
+        std::cerr << "General error: " << e.what() << '\n';
+        return 1;
+    }
+    return 0;
+    
+}
+
+/// @brief -----> Function call to start MSI Application
+void ExecutePayloadApp(){
+    std::cout << "Current Directory: " << std::filesystem::current_path() << std::endl;
+    // system("/opt/antaris/app/XDLX_CamApp_V5");
+    int argc = 1;
+    char *argv[] = { (char*)"XDLX_CamApp_V5" };
+
+    int result = startMSIApp(argc, argv);
+    std::cout << "startMSIApp executed." << std::endl;
+}
+
+
+void handle_TestI2CBus()
+{
+    AntarisReturnCode ret;
+    AntarisApiI2C api_i2c;
+    AntarisApiParser api_parser;
+    i2c_s i2c_info;
+    uint16_t address = 0xA0; // I2C slave address
+    uint8_t zero = 0x00;
+    uint8_t time_bytes[4];
+
+    printf("\nHandling sequence: TestI2CBus\n");
+
+    // Get I2C device info
+    ret = api_parser.api_pa_pc_get_i2c_dev(&i2c_info);
+    if (ret != An_SUCCESS) {
+        printf("Error: JSON configuration invalid. Check ACP settings.\n");
+        return;
+    }
+
+    printf("Total I2C ports = %d\n", i2c_info.i2c_port_count);
+
+    if (i2c_info.i2c_port_count > 0) {
+        // --- Step 1: Send RESET command (0x00 0x00) ---
+        ret = api_i2c.api_pa_pc_write_i2c_bus(
+            i2c_info.i2c_dev[0],  // I2C device
+            address,              // I2C address
+            0x00,                 // Index
+            &zero);               // Data (0x00)
+
+        if (ret != An_SUCCESS) {
+            printf("Error: I2C RESET command failed\n");
+            return;
+        }
+        printf("I2C RESET command sent successfully\n");
+
+        // --- Add 1 second delay here ---
+        sleep(1);
+
+        // --- Step 2: Prepare 4-byte UNIX timestamp ---
+        // time_t now = time(NULL);
+        // if (now == ((time_t)-1)) {
+        //     printf("Error: Failed to get system time\n");
+        //     return;
+        // }
+        // Use std::chrono to get system time in seconds since epoch (as uint32_t)
+        auto now = std::chrono::system_clock::now();
+        auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+        uint32_t timestamp = static_cast<uint32_t>(now_sec);
+        // Store timestamp in little-endian order
+        time_bytes[0] = (timestamp)       & 0xFF;
+        time_bytes[1] = (timestamp >> 8)  & 0xFF;
+        time_bytes[2] = (timestamp >> 16) & 0xFF;
+        time_bytes[3] = (timestamp >> 24) & 0xFF;
+
+        // --- Step 3: Send SET command (0x04 + timestamp) byte by byte ---
+        // for (uint16_t i = 0; i < 4; i++) {
+        //     ret = api_i2c.api_pa_pc_write_i2c_bus(
+        //         i2c_info.i2c_dev[0],
+        //         address,
+        //         0x04 + i,          // Index starts at 0x04
+        //         &time_bytes[i]);   // Each byte of timestamp
+        //     if (ret != An_SUCCESS) {
+        //         printf("Error: Failed to send timestamp byte %d\n", i);
+        //         return;
+        //     }
+        // }
+        ret = api_i2c.api_pa_pc_write_i2c_bus(
+                i2c_info.i2c_dev[0],
+                address,
+                0x04,          // Index starts at 0x04
+                time_bytes);   // Each byte of timestamp
+            if (ret != An_SUCCESS) {
+                printf("Error: Failed to send timestamp byte.");
+                return;
+            }
+
+        printf("I2C SET command sent with timestamp: %02X %02X %02X %02X\n",
+               time_bytes[0], time_bytes[1], time_bytes[2], time_bytes[3]);
+    }
+}
+
+void Start_request_EpsVoltage(mythreadState_t *mythread){
+    AntarisReturnCode ret;
+    UINT16 periodicity_in_ms = 1000;    // Periodicity = 0 indicates one time EPS voltage data frequency. Max is 1 minute
+    printf("\n Sending Get Eps Voltage telemetry start request \n");
+    ReqGetEpsVoltageStartReq req_get_eps_voltage_start_req = {0};
+    req_get_eps_voltage_start_req.correlation_id = mythread->correlation_id;
+    req_get_eps_voltage_start_req.periodicity_in_ms = periodicity_in_ms;
+    ret = api_pa_pc_get_eps_voltage_start_req(channel,&req_get_eps_voltage_start_req);
+    if(ret == An_SUCCESS){
+        printf("Get Eps Voltage telemetry start request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " Get Eps Voltage telemetry start request failed, ret %d\n", ret);
+    }
+}
+
+void Stop_request_EpsVoltage(mythreadState_t *mythread){
+    AntarisReturnCode ret;
+    ReqGetEpsVoltageStopReq req_get_eps_voltage_stop_req = {0};
+    req_get_eps_voltage_stop_req.correlation_id = mythread->correlation_id;
+    ret = api_pa_pc_get_eps_voltage_stop_req(channel,&req_get_eps_voltage_stop_req);
+    if(ret == An_SUCCESS){
+        printf("Get Eps Voltage telemetry stop request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " Get Eps Voltage telemetry stop request failed, ret %d\n", ret);
+    }
+}
+void Start_request_GNSS(mythreadState_t *mythread){
+    AntarisReturnCode ret;
+    UINT16 periodicity_in_ms = 1000;    // Periodicity = 0 indicates one time GNSS EPH data. Max is 1 minute
+    INT8 eph2_enable = 1;
+    printf("\nSending GNSS EPH data Telemetry start request \n");
+    ReqGnssEphStartDataReq req_gnss_eph_start_data_request = {0};
+    req_gnss_eph_start_data_request.correlation_id = mythread->correlation_id;
+    req_gnss_eph_start_data_request.periodicity_in_ms = periodicity_in_ms;
+    req_gnss_eph_start_data_request.eph2_enable = eph2_enable;
+    ret = api_pa_pc_gnss_eph_start_req(channel,&req_gnss_eph_start_data_request);
+    if(ret == An_SUCCESS){
+        printf("GNSS EPH data Telemetry start request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " GNSS EPH data Telemetry start request failed, ret %d\n", ret);
+    }
+}
+
+void Stop_request_GNSS(mythreadState_t *mythread){
+    AntarisReturnCode ret;
+    ReqGnssEphStopDataReq req_gnss_eph_stop_data_request = {0};
+    req_gnss_eph_stop_data_request.correlation_id = mythread->correlation_id;
+    ret = api_pa_pc_gnss_eph_stop_req(channel,&req_gnss_eph_stop_data_request);
+    if(ret == An_SUCCESS){
+        printf("GNSS EPH data Telemetry stop request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " GNSS EPH data Telemety stop request failed, ret %d\n", ret);
+    }
+}
+
+//This sequence should complete within its scheduled_deadline
+void handle_CaptureSeq(mythreadState_t *mythread)
+{
+    std::cout<<"Version: 2...."<<std::endl;
+    printf("Handling sequence: MSI Payload Capture \n");
+    AntarisReturnCode ret;
+    printf("\n Updating the Configuration File \n");
+    Invoke_update_config_file();
+    std::cout<<"Performing I2C Reset and Set."<<std::endl;
+    handle_TestI2CBus();
+    std::cout<<"Request GNSS Data."<<std::endl;
+    Start_request_GNSS(mythread);
+    std::cout<<" Request EPS Voltage: "<<std::endl;
+    Start_request_EpsVoltage(mythread);
+    printf("Performing Imaging Acquisition \n");
+    std::cout<<"Version: 6....\nThis Version contains to store the ADCS Data to an array and pack to metadata. Also it contains the EPS Voltage data. Updated Telemetry info from Payload Application"<<std::endl;
+    // Invoke_i2c();
+    ExecutePayloadApp();
+
+    std::cout<<"Performing GNSS Data Stop request."<<std::endl;
+    Stop_request_GNSS(mythread);
+    std::cout<<"Performing EPS Voltage Stop request."<<std::endl;
+    Stop_request_EpsVoltage(mythread);
+    // Tell PC that current sequence is done
+    CmdSequenceDoneParams sequence_done_params = {0};
+    strcpy(&sequence_done_params.sequence_id[0], Capture_ID);
+    ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+    printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    if (An_SUCCESS != ret) {
+        fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+        _exit(-1);
+    } else {
+        printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+    }
+
+
+}
+
+void handle_FormatSeq(mythreadState_t *mythread)
+{
+    AntarisReturnCode ret;
+    unsigned long current_time_in_ms;
+
+    printf("Handling sequence: Format, %s \n", mythread->seq_params);
+    std::cout<<"Performing Packetization and Frame Formation."<<std::endl;
+    startFormation();
+
+    //File statging
+    std::string directory_path = "/opt/antaris/outbound"; // Change this to your directory path
+    std::vector<std::string> tar_files;
+    if (std::filesystem::exists(directory_path) && std::filesystem::is_directory(directory_path)) {
+        for (const auto& file : std::filesystem::directory_iterator(directory_path)) {
+            std::filesystem::path filePath = file.path();
+            std::string ext = filePath.extension().string();
+            if(ext == ".stream1" || ext == ".stream2"){
+                std::cout << "Test Processing: " << filePath.filename() << std::endl;
+
+                ReqStageFileDownloadParams stage_file_download_params = {0};
+                stage_file_download_params.correlation_id = mythread->correlation_id;
+                
+                // Copy the full path into file_path
+                strncpy(&stage_file_download_params.file_path[0], filePath.filename().c_str(), ANTARIS_MAX_FILE_NAME_LENGTH);
+                std::cout << "Calling stage file g: " << filePath.filename() << std::endl;
+                ret = api_pa_pc_stage_file_download(channel, &stage_file_download_params);
+            }
+        }
+        CmdSequenceDoneParams sequence_done_params = {0};
+        strcpy(&sequence_done_params.sequence_id[0], Format_ID);
+        ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+        printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+        if (An_SUCCESS != ret) {
+            fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+            _exit(-1);
+        } else {
+            printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+        }
+    } else {
+        std::cout << "Directory does not exist." << std::endl;
+    }
+    
+    // Tell PC that current sequence is done
+    CmdSequenceDoneParams sequence_done_params = {0};
+    strcpy(&sequence_done_params.sequence_id[0], Format_ID);
+    ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+    printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    if (An_SUCCESS != ret) {
+        fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+        _exit(-1);
+    } else {
+        printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+    }
+}
+
+static void handle_LogLocation(mythreadState_t *mythread)
+{
+    AntarisReturnCode ret;
+    unsigned long current_time_in_ms;
+
+    // Request PC to get current location
+    ReqGetCurrentLocationParams get_current_location_params = {0};
+    get_current_location_params.correlation_id = mythread->correlation_id;
+    ret = api_pa_pc_get_current_location(channel, &get_current_location_params);
+
+    printf("%s: sent get-current-location request with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    if (An_SUCCESS != ret) {
+        fprintf(stderr, "%s: api_pa_pc_get_current_location failed, ret %d\n", __FUNCTION__, ret);
+        _exit(-1);
+    } else {
+        printf("%s: api_pa_pc_get_current_location returned success, ret %d\n", __FUNCTION__, ret);
+    }
+
+    // Tell PC that current sequence is done
+    CmdSequenceDoneParams sequence_done_params = {0};
+    strcpy(&sequence_done_params.sequence_id[0], LogLocation_ID);
+    ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+    printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    if (An_SUCCESS != ret) {
+        fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+        _exit(-1);
+    } else {
+        printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+    }
+
+    return;
+}
+
+void handle_Eps_Voltage_Telemetry_Request(mythreadState_t *mythread){
+    AntarisReturnCode ret;
+    char *seq_params_lower = (char *)malloc(strlen(mythread->seq_params) + 1);
+    UINT16 periodicity_in_ms = 1000;   // Periodicity = 0 indicates one time EPS voltage data frequency. Max is 1 minute.
+    for(int i = 0;mythread->seq_params[i] != '\0';i++){
+        seq_params_lower[i] = tolower(mythread->seq_params[i]);
+    }
+    seq_params_lower[strlen(mythread->seq_params)] = '\0';
+    if(strcmp(seq_params_lower, "stop") == 0){
+        printf("\n Sending Get Eps Voltage telemetry stop request \n");
+
+        ReqGetEpsVoltageStopReq req_get_eps_voltage_stop_req = {0};
+        req_get_eps_voltage_stop_req.correlation_id = mythread->correlation_id;
+        ret = api_pa_pc_get_eps_voltage_stop_req(channel,&req_get_eps_voltage_stop_req);
+        if(ret == An_SUCCESS){
+            printf("Get Eps Voltage telemetry stop request success, ret %d\n",ret);
+        }
+        else{
+            fprintf(stderr, " Get Eps Voltage telemetry stop request failed, ret %d\n", ret);
+        }
+    }
+    else if(strcmp(seq_params_lower, "start") == 0){
+        printf("\n Sending Get Eps Voltage telemetry start request \n");
+        ReqGetEpsVoltageStartReq req_get_eps_voltage_start_req = {0};
+        req_get_eps_voltage_start_req.correlation_id = mythread->correlation_id;
+        req_get_eps_voltage_start_req.periodicity_in_ms = periodicity_in_ms;
+        ret = api_pa_pc_get_eps_voltage_start_req(channel,&req_get_eps_voltage_start_req);
+        if(ret == An_SUCCESS){
+            printf("Get Eps Voltage telemetry start request success, ret %d\n",ret);
+        }
+        else{
+            fprintf(stderr, " Get Eps Voltage telemetry start request failed, ret %d\n", ret);
+        }
+    }
+    else{
+        printf("Incorrect parameters. Parameter can be 'stop' or 'start'");
+    }
+
+    
+}
+
+void handle_gnns_Data_Telemetry(mythreadState_t *mythread){
+    std::cout<<"Request GNSS Data."<<std::endl;
+    AntarisReturnCode ret;
+    UINT16 periodicity_in_ms = 500;    // Periodicity = 0 indicates one time GNSS EPH data. Max is 1 minute
+    INT8 eph2_enable = 1;
+    printf("\nSending GNSS EPH data Telemetry start request \n");
+    ReqGnssEphStartDataReq req_gnss_eph_start_data_request = {0};
+    req_gnss_eph_start_data_request.correlation_id = mythread->correlation_id;
+    req_gnss_eph_start_data_request.periodicity_in_ms = periodicity_in_ms;
+    req_gnss_eph_start_data_request.eph2_enable = eph2_enable;
+    ret = api_pa_pc_gnss_eph_start_req(channel,&req_gnss_eph_start_data_request);
+    if(ret == An_SUCCESS){
+        printf("GNSS EPH data Telemetry start request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " GNSS EPH data Telemetry start request failed, ret %d\n", ret);
+    }
+    sleep(60);
+
+    printf("\n Sending GNSS EPH data Telemetry stop request \n");
+
+    ReqGnssEphStopDataReq req_gnss_eph_stop_data_request = {0};
+    req_gnss_eph_stop_data_request.correlation_id = mythread->correlation_id;
+    ret = api_pa_pc_gnss_eph_stop_req(channel,&req_gnss_eph_stop_data_request);
+    if(ret == An_SUCCESS){
+        printf("GNSS EPH data Telemetry stop request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " GNSS EPH data Telemety stop request failed, ret %d\n", ret);
+    }
+}
+void handle_gnss_data_Telemetry_Request(mythreadState_t *mythread){
+    AntarisReturnCode ret;
+    // char *seq_params_lower = (char *)malloc(strlen(mythread->seq_params) + 1);
+    UINT16 periodicity_in_ms = 10000;    // Periodicity = 0 indicates one time GNSS EPH data. Max is 1 minute
+    INT8 eph2_enable = 1;
+
+    // for(int i = 0;mythread->seq_params[i] != '\0';i++){
+    //     seq_params_lower[i] = tolower(mythread->seq_params[i]);
+    // }
+    // seq_params_lower[strlen(mythread->seq_params)] = '\0';
+    // if(0) { strcmp(seq_params_lower, "stop") == 0){
+    //     printf("\n Sending GNSS EPH data Telemetry stop request \n");
+
+    //     ReqGnssEphStopDataReq req_gnss_eph_stop_data_request = {0};
+    //     req_gnss_eph_stop_data_request.correlation_id = mythread->correlation_id;
+    //     ret = api_pa_pc_gnss_eph_stop_req(channel,&req_gnss_eph_stop_data_request);
+    //     if(ret == An_SUCCESS){
+    //         printf("GNSS EPH data Telemetry stop request success, ret %d\n",ret);
+    //     }
+    //     else{
+    //         fprintf(stderr, " GNSS EPH data Telemety stop request failed, ret %d\n", ret);
+    //     }
+    // }
+    // else if(strcmp(seq_params_lower, "start") == 0){
+    //     printf("\n Sending GNSS EPH data Telemetry start request \n");
+    //     ReqGnssEphStartDataReq req_gnss_eph_start_data_request = {0};
+    //     req_gnss_eph_start_data_request.correlation_id = mythread->correlation_id;
+    //     req_gnss_eph_start_data_request.periodicity_in_ms = periodicity_in_ms;
+    //     req_gnss_eph_start_data_request.eph2_enable = eph2_enable;
+    //     ret = api_pa_pc_gnss_eph_start_req(channel,&req_gnss_eph_start_data_request);
+    //     if(ret == An_SUCCESS){
+    //         printf("GNSS EPH data Telemetry start request success, ret %d\n",ret);
+    //     }
+    //     else{
+    //         fprintf(stderr, " GNSS EPH data Telemetry start request failed, ret %d\n", ret);
+    //     }
+    // }
+    // else{
+    //     printf("Incorrect parameters. Parameter can be 'stop' or 'start'");
+    // }
+
+    printf("\n[DEBUG]: Trigger along Capture Seq. Sending GNSS EPH data Telemetry start request \n");
+    ReqGnssEphStartDataReq req_gnss_eph_start_data_request = {0};
+    req_gnss_eph_start_data_request.correlation_id = mythread->correlation_id;
+    req_gnss_eph_start_data_request.periodicity_in_ms = periodicity_in_ms;
+    req_gnss_eph_start_data_request.eph2_enable = eph2_enable;
+    ret = api_pa_pc_gnss_eph_start_req(channel,&req_gnss_eph_start_data_request);
+    if(ret == An_SUCCESS){
+        printf("GNSS EPH data Telemetry start request success, ret %d\n",ret);
+    }
+    else{
+        fprintf(stderr, " GNSS EPH data Telemetry start request failed, ret %d\n", ret);
+    }
+
+
+}
+
+void handle_TestGPIO(mythreadState_t *mythread)
+{
+    // AntarisReturnCode ret;
+    // AntarisApiGPIO api_gpio;
+    // gpio_s gpio_info;
+    // int i = 0;
+    // int8_t readPin, writePin, val;
+    // int8_t GPIO_ERROR = -1;
+
+    // printf("\n Handling sequence: TestGPIO! \n");
+
+    // ret = api_gpio.api_pa_pc_get_gpio_info(&gpio_info);
+
+    // if (ret != An_SUCCESS) {
+    //     printf("Error: json file is not configured properly. Kindly check configurations done in ACP \n");
+    //     return;
+    // }
+    // printf("Total gpio pins = %d \n", gpio_info.pin_count);
+
+    // while (i < gpio_info.pin_count) {
+    //     // Read initial value of GPIO pins.
+    //     // Assume GPIO pins are in loopback mode, their value must be same.
+
+    //     readPin = gpio_info.pins[i];
+    //     writePin = gpio_info.pins[i+1];
+    //     val = api_gpio.api_pa_pc_read_gpio(gpio_info.gpio_port, readPin);
+
+    //     if (val == GPIO_ERROR) {
+    //         printf("Error in pin no %d \n", int(readPin));
+    //         return;
+    //     }
+    //     printf("Initial Gpio value of pin no %d is %d \n", int(readPin), val);
+                   
+    //     // Toggle the value
+    //     val = val ^ 1; 
+        
+    //     // Writing value to WritePin.
+    //     ret = api_gpio.api_pa_pc_write_gpio(gpio_info.gpio_port, writePin, val);
+    //     if (ret == GPIO_ERROR) {
+    //         printf("Error in pin no %d \n", int(writePin));
+    //         return;
+    //     }
+    //     printf("Written %d successfully to pin no %d \n", val, int(writePin));
+        
+    //     /* As Read and Write pins are back-to-back connected, 
+    //        Reading value of Read pin to confirm GPIO success/failure
+    //      */
+    //     val = api_gpio.api_pa_pc_read_gpio(gpio_info.gpio_port, readPin);
+    //     if (val == GPIO_ERROR) {
+    //         printf("Error in pin no %d \n", int(readPin));
+    //         return;
+    //     }
+    //     printf("Final Gpio value of pin no %d is %d \n", int(readPin), val);
+         
+    //     i += 2;
+    // }
+
+    // // Tell PC that current sequence is done
+    // CmdSequenceDoneParams sequence_done_params = {0};
+    // strcpy(&sequence_done_params.sequence_id[0], TestGPIO_Sequence_ID);
+    // ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+    // printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    // if (An_SUCCESS != ret) {
+    //     fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+    //     _exit(-1);
+    // } 
+    
+    // printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+    printf("skipping for testing different api");
+    
+}
+
+void handle_StageFile(mythreadState_t *mythread)
+{
+    AntarisReturnCode ret;
+    FILE *fp = NULL;
+    size_t filename_size = 0;
+    ReqStageFileDownloadParams download_file_params = {0};
+    
+    printf("\n Handling sequence: StageFile! \n");
+
+    filename_size = strnlen(STAGE_FILE_DOWNLOAD_DIR, MAX_FILE_OR_PROP_LEN_NAME) + strnlen(STAGE_FILE_NAME, MAX_FILE_OR_PROP_LEN_NAME);
+
+    if (filename_size > MAX_FILE_OR_PROP_LEN_NAME) {
+        printf("Error: Stagefile path can not be greater than %d \n", MAX_FILE_OR_PROP_LEN_NAME);
+        goto exit_sequence;
+    }
+
+    sprintf(download_file_params.file_path, "%s%s", STAGE_FILE_DOWNLOAD_DIR, STAGE_FILE_NAME);
+    
+    // Adding dummy data in file
+    fp = fopen(download_file_params.file_path, "w");
+    if (fp == NULL) {
+        printf("Error: Can not open file %s. Sequence failed \n", download_file_params.file_path);
+        goto exit_sequence;
+    }
+    fprintf(fp, "Testing file download with payload \n");
+    fclose(fp);
+
+    printf("Info: Downloading file = %s \n", download_file_params.file_path);
+
+    // Staging file
+    ret = api_pa_pc_stage_file_download(channel, &download_file_params);
+
+    if (ret == An_GENERIC_FAILURE) {
+        printf("Error: Failed to stage file %s \n", download_file_params.file_path);
+    }
+exit_sequence:    
+    // Tell PC that current sequence is done
+    CmdSequenceDoneParams sequence_done_params = {0};
+    strcpy(&sequence_done_params.sequence_id[0], StageFile_Sequence_ID);
+    ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+    printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    if (An_SUCCESS != ret) {
+        fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+        _exit(-1);
+    } 
+    
+    printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+    
+}
+
+void handle_TestCANBus(mythreadState_t *mythread)
+{
+    AntarisReturnCode ret = An_SUCCESS;
+    AntarisApiCAN canInfo;
+    int dlc = 8;
+    printf("Test CAN bus\n");
+
+    // Default data
+    char data[] = "0x123 0x11,0x12,0x13,0x14,0x15,0x16,0x17";
+    char *parts[2];
+
+    // Split input string into Arbitration ID and Data
+    char *token = strtok(data, " ");
+    for (int i = 0; i < 2 && token != NULL; i++) {
+        parts[i] = token;
+        token = strtok(NULL, " ");
+    }
+
+    if (parts[0] == NULL || parts[1] == NULL) {
+        printf("Input format is incorrect. Using default arbitration ID and data bytes.\n");
+    }
+
+    // Convert Arbitration ID
+    int arb_id = (int)strtol(parts[0], NULL, 16);
+
+    // Convert Data Bytes
+    unsigned char data_bytes[MAX_DATA_BYTES];
+    int data_count = 0;
+    token = strtok(parts[1], ",");
+    while (token != NULL && data_count < MAX_DATA_BYTES) {
+        data_bytes[data_count++] = (unsigned char)strtol(token, NULL, 16);
+        token = strtok(NULL, ",");
+    }
+
+    // Get CAN bus info
+    canInfo.api_pa_pc_get_can_dev(&canInfo);
+    printf("Total CAN bus ports = %d\n", canInfo.can_port_count);
+
+    // Select first available CAN device
+    if (canInfo.can_port_count == 0) {
+        printf("No CAN devices available!\n");
+        return;
+    }
+    
+    // Start receiver threads for each CAN device
+    for (int i = 0; i < canInfo.can_port_count; i++) {
+        printf("Starting CAN receiver on = %s \n", canInfo.can_dev[i]);
+        canInfo.api_pa_pc_start_can_receiver_thread(i);
+    }
+
+    // Send test messages on each CAN bus
+    int send_msg_limit = 10;
+    for (int loopCounter = 0; loopCounter < send_msg_limit; loopCounter++) {
+        for (int i = 0; i < canInfo.can_port_count; i++) {
+            canInfo.api_pa_pc_send_can_message(i, arb_id + i, data_bytes, dlc);
+        }
+        sleep(1);
+    }
+
+    printf("Checking received data \n");
+
+    for (int i = 0; i < canInfo.can_port_count; i++) {
+        while (canInfo.api_pa_pc_get_can_message_received_count(i) > 0) {
+            struct can_frame frame = canInfo.api_pa_pc_read_can_data(i);
+            printf("Received message from %s with id %d \n ",  canInfo.can_dev[i], frame.can_id);
+            for (int j = 0; j < CAN_MAX_DLEN; j++) {
+                printf("%x \t", frame.data[j]);
+            }
+            printf("\n");
+        }
+        printf("Message queue from %s dev is empty now \n",canInfo.can_dev[i]);
+        sleep(1);
+    }
+
+    printf("Completed reading\n");
+
+exit_sequence:    
+    // Tell PC that current sequence is done
+    CmdSequenceDoneParams sequence_done_params = {0};
+    strcpy(&sequence_done_params.sequence_id[0], StageFile_Sequence_ID);
+    ret = api_pa_pc_sequence_done(channel, &sequence_done_params);
+
+    printf("%s: sent sequence-done notification with correlation_id %u\n", mythread->seq_id, mythread->correlation_id);
+    if (An_SUCCESS != ret) {
+        fprintf(stderr, "%s: api_pa_pc_sequence_done failed, ret %d\n", __FUNCTION__, ret);
+        _exit(-1);
+    } 
+    
+    printf("%s: api_pa_pc_sequence_done returned success, ret %d\n", __FUNCTION__, ret);
+    
+}
+
+// Table of Sequence_id : FsmThread
+mythreadState_t *payload_sequences_fsms[SEQUENCE_ID_MAX];
+unsigned int current_sequence_idx = Capture_IDX;
+
+void *threadStartWrapper(void *s)
+{
+    mythreadState_t *_state = (mythreadState_t *)s;
+
+    _state->entry_fn(_state);
+
+    return NULL;
+}
+
+mythreadState_t *fsmThreadCreate(AntarisChannel channel, unsigned int counter, const char *seq_id, fsm_entry_fn_t func)
+{
+    mythreadState_t *state = (mythreadState_t *)malloc(sizeof(mythreadState_t));
+    
+    if (NULL == state) {
+        return state;
+    }
+
+    state->channel = channel;
+    state->counter = counter;
+    strcpy(state->seq_id, seq_id);
+    state->entry_fn = func;
+    strcpy(&state->state[0], "NOT_STARTED");
+
+    pthread_mutex_init(&state->cond_lock, NULL);
+    pthread_cond_init(&state->condition, NULL);
+
+    return state;
+}
+
+static void fsmThreadCleanup(mythreadState_t *state)
+{
+    pthread_cond_destroy(&state->condition);
+    pthread_mutex_destroy(&state->cond_lock);
+    free(state);
+}
+
+int fsmThreadStart(mythreadState_t *threadState)
+{
+    pthread_attr_t attr;
+    void *thread_exit_status;
+
+    if (strcmp(threadState->state, "NOT_STARTED") != 0) {
+        // wait for the previous thread's cleanup
+        printf("%s: Requesting earlier sequence processor's cleanup\n", threadState->seq_id);
+        sleep(1);
+        pthread_cond_signal(&threadState->condition);
+        printf("%s: waiting for previous sequence processor's cleanup\n", threadState->seq_id);
+        pthread_join(threadState->thread_id, &thread_exit_status);
+    }
+
+    pthread_attr_init(&attr);
+    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+    return pthread_create(&threadState->thread_id, &attr, threadStartWrapper, threadState);
+}
+
+static int get_sequence_idx_from_seq_string(INT8 *sequence_string)
+{
+    printf("%s: Decoding Sequence %s\n", __FUNCTION__, sequence_string);
+    if (strcmp(sequence_string, Capture_ID) == 0) {
+        printf("\t => %d\n", Capture_IDX);
+        return Capture_IDX;
+    } else if (strcmp(sequence_string, Format_ID) == 0) {
+        printf("\t => %d\n", Format_IDX);
+        return Format_IDX;
+    } else if (strcmp(sequence_string, LogLocation_ID) == 0) {
+        printf("\t => %d\n", LogLocation_IDX);
+        return LogLocation_IDX;
+    } else if (strcmp(sequence_string, TestGPIO_Sequence_ID) == 0) {
+        printf("\t => %d\n", TestGPIO_Sequence_IDX);
+        return TestGPIO_Sequence_IDX;
+    } else if (strcmp(sequence_string, StageFile_Sequence_ID) == 0) {
+        printf("\t => %d\n", StageFile_Sequence_IDX);
+        return StageFile_Sequence_IDX;
+    } else if (strcmp(sequence_string, TestCANBus_Sequence_ID) == 0) {
+        printf("\t => %d\n", TestCANBus_Sequence_IDX);
+        return TestCANBus_Sequence_IDX;
+    }
+    else if (strcmp(sequence_string, EpsVoltageTelemetry_ID) == 0) {
+        printf("\t => %d\n", EpsVoltageTelemetry_IDX);
+        return EpsVoltageTelemetry_IDX;
+    }
+    else if (strcmp(sequence_string, GnssDataTelemetry_ID) == 0) {
+        printf("\t => %d\n", GnssDataTelemetry_IDX);
+        return GnssDataTelemetry_IDX;
+    }
+
+
+    printf("Unknown sequence, returning -1\n");
+    return -1;
+}
+
+// Callback functions (PC => Application)
+AntarisReturnCode start_sequence(StartSequenceParams *start_seq_param)
+{
+    printf("start_sequence with received id %s, params %s\n", &start_seq_param->sequence_id[0], &start_seq_param->sequence_params[0]);
+    if (debug) {
+        displayStartSequenceParams(start_seq_param);
+    }
+
+    // <Payload Application Business Logic>
+    // Start Sequence FSM Thread
+    current_sequence_idx = get_sequence_idx_from_seq_string(&start_seq_param->sequence_id[0]);
+    if (current_sequence_idx ==  -1) {
+        printf("Invalid Sequence \n");
+        return An_GENERIC_FAILURE;
+    }
+    mythreadState_t *thread_state = payload_sequences_fsms[current_sequence_idx];
+    strcpy(thread_state->received_name, &start_seq_param->sequence_id[0]);
+    strncpy(thread_state->seq_params, start_seq_param->sequence_params, SEQ_PARAMS_LEN);
+    thread_state->scheduled_deadline = start_seq_param->scheduled_deadline;
+    thread_state->correlation_id = start_seq_param->correlation_id;
+    fsmThreadStart(thread_state);
+
+    return An_SUCCESS;
+}
+
+void wakeup_seq_fsm(mythreadState_t *threadState)
+{   
+    if (threadState == NULL) {
+        printf("thread state is NULL!!\n");
+        return;
+    }
+    sleep(1); // avoid lost wakeups by giving fsm thread time to block on its pthread_cond_wait
+    printf("called wakeup_seq_fsm for %s\n", threadState->seq_id);
+    pthread_cond_signal(&threadState->condition);
+}
+
+AntarisReturnCode process_req_payload_metrics(ReqPayloadMetricsParams *payload_metrics_param)
+{
+    unsigned int debug = 1;
+    PayloadMetricsResponse   resp_payload_metrics_params;
+
+    printf("Before resp_payload_metrics_params\n");
+
+    time_t now = time(0);
+    UINT64 epoch = static_cast<UINT64>(now);
+    resp_payload_metrics_params.correlation_id = payload_metrics_param->correlation_id;
+    resp_payload_metrics_params.used_counter = TelemetryData.used_counter;   // No of counters used
+    resp_payload_metrics_params.timestamp = TelemetryData.timestamp; // Timestamp in milliseconds since epoch. At data retrived time
+
+    size_t max_metrics_counter = sizeof(((struct PayloadMetricsResponse*)0)->metrics) / sizeof(struct PayloadMetricsInfo);
+    size_t metrics_name = sizeof(((struct PayloadMetricsInfo*)0)->names);
+
+    // Total number of counters supported is 'max_metrics_counter', hence setting all names to 0
+    for (int i = 0; i < max_metrics_counter ; i++) {
+        resp_payload_metrics_params.metrics[i].counter = 0; 
+        memset(resp_payload_metrics_params.metrics[i].names, 0, metrics_name);
+    }
+
+    // Set counter, names values
+    for (int i=0; i< resp_payload_metrics_params.used_counter ; i++) {
+        resp_payload_metrics_params.metrics[i].counter = TelemetryData.metrics[i].counter;    // Example value
+        sprintf(resp_payload_metrics_params.metrics[i].names, "%s", TelemetryData.metrics[i].names);
+        printf("%d = %s \n", resp_payload_metrics_params.metrics[i].counter, resp_payload_metrics_params.metrics[i].names);
+    }
+
+    printf("payload_metrics_param : Got payload_metrics_param request from PC\n");
+
+    if (debug) {
+        displayPayloadMetricsResponse((const void *)&resp_payload_metrics_params);
+    }
+
+    api_pa_pc_response_payload_metrics(channel, &resp_payload_metrics_params);
+
+    return An_SUCCESS;
+}
+AntarisReturnCode shutdown_app(ShutdownParams *shutdown_param)
+{
+    if (shutdown_param == NULL){
+        printf("ERROR: shutdown params are NULL!");
+        _exit(-1);
+    }
+    RespShutdownParams   resp_shutdown_params;
+
+    printf("shutdown_app : Got Shutdown request from PC\n");
+
+    if (debug) {
+        displayShutdownParams(shutdown_param);
+    }
+
+    shutdown_requested = 1;
+
+    // <Payload Application Business Logic>
+    // 1. Shutdown Payload Hardware
+    // 2. Do whatever is required before shutting down the application
+   
+    // Now respond back to Payload Controller about shutdown completion 
+    resp_shutdown_params.correlation_id = shutdown_param->correlation_id;
+    resp_shutdown_params.req_status = An_SUCCESS;
+
+    api_pa_pc_response_shutdown(channel, &resp_shutdown_params);
+
+    printf("Current sequence id: %d\n", current_sequence_idx);
+
+    for ( int thread_seq_id = 0; thread_seq_id < SEQUENCE_ID_MAX; thread_seq_id++ ) {
+        printf("Stopping %s\n", payload_sequences_fsms[thread_seq_id]->seq_id);
+        wakeup_seq_fsm(payload_sequences_fsms[thread_seq_id]);
+    }
+
+    return An_SUCCESS;
+}
+
+AntarisReturnCode process_health_check(HealthCheckParams *health_check_param)
+{
+    RespHealthCheckParams   resp_health_check_params;
+
+    printf("process_health_check\n");
+    if (debug) {
+        displayHealthCheckParams(health_check_param);
+    }
+
+    resp_health_check_params.correlation_id = health_check_param->correlation_id;
+    resp_health_check_params.application_state = application_state;
+    resp_health_check_params.reqs_to_pc_in_err_cnt = reqs_to_pc_in_err_cnt;
+    resp_health_check_params.resps_to_pc_in_err_cnt = resps_to_pc_in_err_cnt;
+
+    api_pa_pc_response_health_check(channel, &resp_health_check_params);
+
+    return An_SUCCESS;
+}
+
+AntarisReturnCode process_response_get_eps_voltage(GetEpsVoltage *get_eps_voltage)
+{
+    printf("process_response_get_eps_voltage\n");
+    printf("eps voltage is: %f\n",get_eps_voltage->eps_voltage);
+    epsVoltage = get_eps_voltage->eps_voltage;
+    if (debug) {
+        displayGetEpsVoltage(get_eps_voltage);
+    }
+
+    // #<Payload Application Business Logic>
+    wakeup_seq_fsm(payload_sequences_fsms[current_sequence_idx]);
+    return An_SUCCESS;
+}
+
+AntarisReturnCode process_response_gnss_eph_data(GnssEphData *gnss_eph_data)
+{
+    static auto start = std::chrono::high_resolution_clock::now();
+    printf("process_response_gnss_eph_data\n");
+    if (debug) {
+        displayGnssEphData(gnss_eph_data);
+    }
+
+    const char *fields[] = {
+    "Time Validity",
+    "ECI Position Validity",
+    "ECI Velocity Validity",
+    "ECEF Position Validity",
+    "ECEF Velocity Validity",
+    "Angular Rate Validity",
+    "Attitude Quaternion Validity",
+    "Lat-Lon-Altitude Validity",
+    "Nadir Vector Validity",
+    "Geodetric Nadir Vector Validity",
+    "Beta Angle Validity"
+};
+
+    if(gnss_eph_data->gps_timeout_flag == 1){
+        printf("gps_fix_time: %d",gnss_eph_data->gps_eph_data.gps_fix_time);
+        printf("gps_sys_time: %llu",gnss_eph_data->gps_eph_data.gps_sys_time);
+        OBC_time obc = gnss_eph_data->gps_eph_data.obc_time;
+        printf("obc_time : %02d:%02d:%02d.%03d Date: %02d/%02d/%d\n",
+               obc.hour, obc.minute, obc.millisecond / 1000,
+               obc.millisecond % 1000, obc.date, obc.month, obc.year);
+        for(int i = 0; i<3; i++){
+            printf("gps_position_ecef: %d\n",gnss_eph_data->gps_eph_data.gps_position_ecef[i]);
+        }
+
+        for(int i = 0; i<3; i++){
+            printf("gps_velocity_ecef: %d\n",gnss_eph_data->gps_eph_data.gps_velocity_ecef[i]);
+           
+        }
+        printf("gps_validity_flag_pos_vel: %d\n",gnss_eph_data->gps_eph_data.gps_validity_flag_pos_vel);
+    }
+    else if(gnss_eph_data->adcs_timeout_flag == 1){
+        if(storeData){
+            gnss_eph_data_history.push_back(gnss_eph_data->adcs_eph_data); // Store a copy in the vector
+            printf("Stored ADCS EPH data in history.\n");
+        }
+        latest_gnss_eph_data = *gnss_eph_data; // Copy the structure
+
+        printf("\n\n\n\n\n\n\n\nActual CallBack Function Data.............");
+        auto now = std::chrono::system_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+        std::time_t t_now = std::chrono::system_clock::to_time_t(now);
+        std::tm bt = *std::localtime(&t_now);
+        std::cout << std::put_time(&bt, "%Y-%m-%d %H:%M:%S");
+        std::cout << '.' << std::setfill('0') << std::setw(3) << ms.count() << '\n';
+        printf("\nADCS Orbit Propagator/System Time = %f\n",gnss_eph_data->adcs_eph_data.orbit_time);
+        printf("ECI Position X (km) = %f\n",gnss_eph_data->adcs_eph_data.eci_position_x);
+        printf("ECI Position Y (km) = %f\n",gnss_eph_data->adcs_eph_data.eci_position_y);
+        printf("ECI Position Z (km) = %f\n",gnss_eph_data->adcs_eph_data.eci_position_z);
+        printf("ECI Velocity X (km/s) = %f\n",gnss_eph_data->adcs_eph_data.eci_velocity_x);
+        printf("ECI Velocity Y (km/s) = %f\n",gnss_eph_data->adcs_eph_data.eci_velocity_y);
+        printf("ECI Velocity Z (km/s) = %f\n",gnss_eph_data->adcs_eph_data.eci_velocity_z);
+        printf("ECEF Position X (km) = %f\n",gnss_eph_data->adcs_eph_data.ecef_position_x);
+        printf("ECEF Position Y (km) = %f\n",gnss_eph_data->adcs_eph_data.ecef_position_y);
+        printf("ECEF Position Z (km) = %f\n",gnss_eph_data->adcs_eph_data.ecef_position_z);
+        printf("ECEF Velocity X (km/s) = %f\n",gnss_eph_data->adcs_eph_data.ecef_velocity_x);
+        printf("ECEF Velocity Y (km/s) = %f\n",gnss_eph_data->adcs_eph_data.ecef_velocity_y);
+        printf("ECEF Velocity Z (km/s) = %f\n",gnss_eph_data->adcs_eph_data.ecef_velocity_z);
+        printf("X axis Angular rate (deg/s) = %f\n",gnss_eph_data->adcs_eph_data.ang_rate_x);
+        printf("Y axis Angular rate (deg/s) = %f\n",gnss_eph_data->adcs_eph_data.ang_rate_y);
+        printf("Z axis Angular rate (deg/s) = %f\n",gnss_eph_data->adcs_eph_data.ang_rate_z);
+        printf("Attitude Quaternion 1 = %f\n",gnss_eph_data->adcs_eph_data.att_quat_1);
+        printf("Attitude Quaternion 2 = %f\n",gnss_eph_data->adcs_eph_data.att_quat_2);
+        printf("Attitude Quaternion 3 = %f\n",gnss_eph_data->adcs_eph_data.att_quat_3);
+        printf("Attitude Quaternion 4 = %f\n",gnss_eph_data->adcs_eph_data.att_quat_4);
+        printf("Latitude (deg) = %f\n",gnss_eph_data->adcs_eph_data.latitude);
+        printf("Longitude (deg) = %f\n",gnss_eph_data->adcs_eph_data.longitude);
+        printf("Altitude (km) %f\n",gnss_eph_data->adcs_eph_data.altitude);
+        printf("X Nadir Vector %f\n",gnss_eph_data->adcs_eph_data.nadir_vector_x);
+        printf("Y Nadir Vector %f\n",gnss_eph_data->adcs_eph_data.nadir_vector_y);
+        printf("Z Nadir Vector %f\n",gnss_eph_data->adcs_eph_data.nadir_vector_z);
+        printf("X Geodetic Nadir Vector %f\n",gnss_eph_data->adcs_eph_data.gd_nadir_vector_x);
+        printf("Y Geodetic Nadir Vector %f\n",gnss_eph_data->adcs_eph_data.gd_nadir_vector_y);
+        printf("Z Geodetic Nadir Vector %f\n",gnss_eph_data->adcs_eph_data.gd_nadir_vector_z);
+        printf("Beta Angle (deg) %f\n",gnss_eph_data->adcs_eph_data.beta_angle);
+        for (int i = 0; i < sizeof(fields)/sizeof(fields[0]); i++) {
+            int bit_value = (gnss_eph_data->adcs_eph_data.validity_flags >> i) & 1;
+            printf("%s: %d\n", fields[i], bit_value);
+
+        }
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    double duration = std::chrono::duration<double>(end - start).count();
+    std::cout<<"Time Difference for next call: "<<duration<<std::endl;
+    // #<Payload Application Business Logic>
+    wakeup_seq_fsm(payload_sequences_fsms[current_sequence_idx]);
+    return An_SUCCESS;
+    
+}
+
+AntarisReturnCode process_response_register(RespRegisterParams *resp_register_param)
+{
+    printf("process_response_register\n");
+    if (debug) {
+        displayRespRegisterParams(resp_register_param);
+    }
+
+    // <Payload Application Business Logic>
+    return An_SUCCESS;
+}
+
+AntarisReturnCode process_response_get_current_location(RespGetCurrentLocationParams *resp_get_curr_location_param)
+{
+    printf("process_response_get_current_location\n");
+    if (debug) {
+        displayRespGetCurrentLocationParams(resp_get_curr_location_param);
+    }
+
+    // #<Payload Application Business Logic>
+    wakeup_seq_fsm(payload_sequences_fsms[current_sequence_idx]);
+    return An_SUCCESS;
+}
+
+AntarisReturnCode process_response_stage_file_download(RespStageFileDownloadParams *resp_stage_file_download)
+{
+    printf("process_response_stage_file_download\n");
+    if (debug) {
+        displayRespStageFileDownloadParams(resp_stage_file_download);
+    }
+
+    // #<Payload Application Business Logic>
+    wakeup_seq_fsm(payload_sequences_fsms[current_sequence_idx]);
+    return An_SUCCESS;
+}
+
+AntarisReturnCode process_response_payload_power_control(RespPayloadPowerControlParams *resp_payload_power_control)
+{
+    printf("process_response_payload_power_control\n");
+    if (debug) {
+        displayRespPayloadPowerControlParams(resp_payload_power_control);
+    }
+
+    // #<Payload Application Business Logic>
+    wakeup_seq_fsm(payload_sequences_fsms[current_sequence_idx]);
+    return An_SUCCESS;
+}
+
+int main(int argc, char *argv[])
+{
+    unsigned short int correlation_id = 0;
+    AntarisReturnCode ret;
+    void *exit_status;
+
+    init_satos_lib();
+    
+    // Callback functions (PC => PA)
+    AntarisApiCallbackFuncList callback_func_list = {
+            start_sequence: start_sequence,
+            shutdown_app : shutdown_app,
+            process_health_check : process_health_check,
+            process_response_register : process_response_register,
+            process_response_get_current_location : process_response_get_current_location,
+            process_response_stage_file_download : process_response_stage_file_download,
+            process_response_payload_power_control : process_response_payload_power_control,
+            req_payload_metrics: process_req_payload_metrics,
+            process_cb_gnss_eph_data : process_response_gnss_eph_data,
+            process_cb_get_eps_voltage: process_response_get_eps_voltage,
+    };
+
+    // Create Channel to talk to Payload Controller (PC)
+    channel = api_pa_pc_create_channel(&callback_func_list);
+
+    if (channel == (AntarisChannel)NULL) {
+        fprintf(stderr, "api_pa_pc_create_channel failed \n");
+        _exit(-1);
+    }
+
+    // Create FSM threads (arg : channel, count, seq_id, fsm-function)
+    payload_sequences_fsms[Capture_IDX] = fsmThreadCreate(channel, 1, Capture_ID, handle_CaptureSeq);
+    payload_sequences_fsms[Format_IDX] = fsmThreadCreate(channel, 1, Format_ID, handle_FormatSeq);
+    payload_sequences_fsms[LogLocation_IDX] = fsmThreadCreate(channel, 1, LogLocation_ID, handle_LogLocation);
+    payload_sequences_fsms[TestGPIO_Sequence_IDX] = fsmThreadCreate(channel, 1, TestGPIO_Sequence_ID, handle_TestGPIO);
+    payload_sequences_fsms[StageFile_Sequence_IDX] = fsmThreadCreate(channel, 1, StageFile_Sequence_ID, handle_StageFile);
+    payload_sequences_fsms[TestCANBus_Sequence_IDX] = fsmThreadCreate(channel, 1, TestCANBus_Sequence_ID, handle_TestCANBus);
+    payload_sequences_fsms[EpsVoltageTelemetry_IDX] = fsmThreadCreate(channel, 1, EpsVoltageTelemetry_ID, handle_Eps_Voltage_Telemetry_Request);
+    payload_sequences_fsms[GnssDataTelemetry_IDX] = fsmThreadCreate(channel, 1, GnssDataTelemetry_ID, handle_gnns_Data_Telemetry);//handle_gnss_data_Telemetry_Request);
+
+    // Register application with PC
+    // 2nd parameter decides PC's action on PA's health check failure
+    // 0 => No Action, 1 => Reboot PA
+    ReqRegisterParams register_params = {0};
+    register_params.correlation_id = correlation_id;
+    register_params.health_check_fail_action = 0;
+    ret = api_pa_pc_register(channel, &register_params);
+    printf("api_pa_pc_register returned %d (%s)\n", ret, ret == An_SUCCESS ? "SUCCESS" : "FAILURE");
+    correlation_id += 1;
+
+    // After registration, simulated PC will ask application to start sequence HelloWorld
+
+    printf("All sequences ready to start ...\n");
+
+    while (shutdown_requested == 0) {
+        sleep(1);
+    }
+
+    printf("Detected shutdown request, waiting for sequence cleanups\n");
+
+    // Wait for all FSM threads to complete
+
+    if (strcmp(payload_sequences_fsms[Capture_IDX]->state, "NOT_STARTED") != 0) {
+        pthread_join(payload_sequences_fsms[Capture_IDX]->thread_id, &exit_status);
+    }
+
+    if (strcmp(payload_sequences_fsms[Format_IDX]->state, "NOT_STARTED") != 0) {    
+        pthread_join(payload_sequences_fsms[Format_IDX]->thread_id, &exit_status);
+    }
+
+    if (strcmp(payload_sequences_fsms[LogLocation_IDX]->state, "NOT_STARTED") != 0) {
+        pthread_join(payload_sequences_fsms[LogLocation_IDX]->thread_id, &exit_status);
+    }
+
+    if (strcmp(payload_sequences_fsms[TestGPIO_Sequence_IDX]->state, "NOT_STARTED") != 0) {
+        pthread_join(payload_sequences_fsms[TestGPIO_Sequence_IDX]->thread_id, &exit_status);
+    }
+
+    if (strcmp(payload_sequences_fsms[StageFile_Sequence_IDX]->state, "NOT_STARTED") != 0) {
+        pthread_join(payload_sequences_fsms[StageFile_Sequence_IDX]->thread_id, &exit_status);
+    }
+    if (strcmp(payload_sequences_fsms[EpsVoltageTelemetry_IDX]->state, "NOT_STARTED") != 0) {
+        pthread_join(payload_sequences_fsms[EpsVoltageTelemetry_IDX]->thread_id, &exit_status);
+    }
+    if (strcmp(payload_sequences_fsms[GnssDataTelemetry_IDX]->state, "NOT_STARTED") != 0) {
+        pthread_join(payload_sequences_fsms[GnssDataTelemetry_IDX]->thread_id, &exit_status);
+    }
+
+    printf("Cleaning up sequence resources\n");
+
+    fsmThreadCleanup(payload_sequences_fsms[Capture_IDX]);
+    fsmThreadCleanup(payload_sequences_fsms[Format_IDX]);
+    fsmThreadCleanup(payload_sequences_fsms[LogLocation_IDX]);
+    fsmThreadCleanup(payload_sequences_fsms[TestGPIO_Sequence_IDX]);
+    fsmThreadCleanup(payload_sequences_fsms[StageFile_Sequence_IDX]);
+    fsmThreadCleanup(payload_sequences_fsms[EpsVoltageTelemetry_IDX]);
+    fsmThreadCleanup(payload_sequences_fsms[GnssDataTelemetry_IDX]);
+
+    // Delete Channel
+    api_pa_pc_delete_channel(channel);
+
+    printf("==== All Done: Exiting Main Thread ====\n\n");
+
+    // Deafault timeout is set to exit the function running inside this function
+    with_timeout_deinit_satos_lib();
+    _exit(0);
+}

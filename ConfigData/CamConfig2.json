@@ -1,0 +1,57 @@
+
+{
+  "VislinkSettings": [
+    {
+      "Device": "c",
+      "VariableName": "TestPattern",
+      "Value": "0"
+    },
+    {
+      "Device": "c",
+      "VariableName": "Region0OffsetY",
+      "Value": "1906"
+    },
+
+    {
+      "Device": "c",
+      "VariableName": "Region1OffsetY",
+      "Value": "2372"
+    },    
+    {
+      "Device": "c",
+      "VariableName": "Region2OffsetY",
+      "Value": "2838"
+    },    
+    {
+      "Device": "c",
+      "VariableName": "Region3OffsetY",
+      "Value": "3304"
+    },    
+    {
+      "Device": "c",
+      "VariableName": "Region4OffsetY",
+      "Value": "3770"
+    },    
+    {
+      "Device": "c",
+      "VariableName": "Region5OffsetY",
+      "Value": "4236"
+    },    
+    {
+      "Device": "c",
+      "VariableName": "Region6OffsetY",
+      "Value": "4702"
+    },    
+    {
+      "Device": "c",
+      "VariableName": "RegionHeight",
+      "Value": "384"
+    },
+    
+    {
+      "Device": "c",
+      "VariableName": "Width",
+      "Value": "8448"
+    }
+  ]
+}

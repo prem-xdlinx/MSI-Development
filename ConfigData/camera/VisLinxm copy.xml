@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RegisterDescription
+    ModelName="Vislinx-M"
+    VendorName="KAYA_Instruments"
+    ToolTip="Vislinx-M Camera"
+    StandardNameSpace="None"
+    SchemaMajorVersion="1"
+    SchemaMinorVersion="1"
+    SchemaSubMinorVersion="0"
+    MajorVersion="1"
+    MinorVersion="1"
+    SubMinorVersion="0"
+    ProductGuid="AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+    VersionGuid="11111111-2222-3333-4444-555555555555"
+    xmlns="http://www.genicam.org/GenApi/Version_1_1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.genicam.org/GenApi/Version_1_1
+    http://www.genicam.org/GenApi/GenApiSchema_Version_1_1.xsd">
+
+    <!-- Root categories -->
+    <Group Comment="RootCategory">
+        <Category Name="Root" NameSpace="Standard">
+            <Visibility>Beginner</Visibility>
+            <ImposedAccessMode>RO</ImposedAccessMode>
+            <pFeature>DeviceControl</pFeature>
+            <pFeature>ImageFormatControl</pFeature>
+            <pFeature>AcquisitionControl</pFeature>
+            <pFeature>TransportLayerControl</pFeature>
+            <pFeature>AnalogControl</pFeature>
+            <pFeature>ChunkDataControl</pFeature>
+            <pFeature>PixelCorrectionControl</pFeature>
+            <pFeature>CoaXPress</pFeature>
+            <pFeature>TestControl</pFeature>
+        </Category>
+    </Group>
+
+    <!-- Sub categories -->
+    <Group Comment="SubCategories">
+
+        <!-- Device Control -->
+        <Category Name="DeviceControl" NameSpace="Standard">
+            <ToolTip>Category for Device information and control.</ToolTip>
+            <Description>Category for Device information and control.</Description>
+            <DisplayName>Device Control</DisplayName>
+            <Visibility>Beginner</Visibility>
+            <ImposedAccessMode>RO</ImposedAccessMode>
+            <pFeature>DeviceReset</pFeature>
+            <pFeature>DeviceVendorName</pFeature>
+            <pFeature>DeviceModelName</pFeature>
+            <pFeature>DeviceManufacturerInfo</pFeature>
+            <pFeature>DeviceVersion</pFeature>
+            <pFeature>DeviceFirmwareVersion</pFeature>
+            <pFeature>DeviceSerialNumber</pFeature>
+            <pFeature>DeviceGPIOAvailable</pFeature>
+            <pFeature>DeviceDDRAvailable</pFeature>
+            <pFeature>DeviceSensorType</pFeature>
+            <pFeature>DeviceTemperatureSelector</pFeature>
+            <pFeature>DeviceTemperature</pFeature>
+            <pFeature>Timestamp</pFeature>
+            <pFeature>TimestampReset</pFeature>
+            <pFeature>TimestampLatch</pFeature>
+            <pFeature>TimestampLatchValue</pFeature>
+            <pFeature>TimestampResetValue</pFeature>
+            <pFeature>DeviceSerialPortSelector</pFeature>
+            <pFeature>DeviceSerialPortEventId</pFeature>
+            <pFeature>DeviceSerialPortTxBuffer</pFeature>
+        </Category>
+    </Group>
+</RegisterDescription>

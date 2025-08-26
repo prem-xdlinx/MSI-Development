@@ -1,0 +1,7 @@
+KYFG_SetCameraValueInt(camHandleArray[CameraID], "Width", 640); // set camera width 
+KYFG_SetCameraValueInt(camHandleArray[CameraID], "Height", 480); // set camera height
+KYFG_SetCameraValueEnum_ByValueName(camHandleArray[CameraID], "PixelFormat", "Mono8"); // set camera pixel format
+
+KYFG_GetGrabberValueType(FGHANDLE handle, const char *paramName);
+
+set vislink Height
