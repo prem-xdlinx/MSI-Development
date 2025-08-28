@@ -1,0 +1,220 @@
+xdlinx@xdlinx-desktop:~/Pictures/XDLX_KYFG_V6_1_Dev$ ./fastDisplay 
+Paths are None and /opt/KAYA_Instruments/Examples/Vision Point API/Display_live/Capture/
+Connecting camera with the following parameters:
+  Frame Width      : 9344
+  Frame Height     : 384
+  Frame Rate       : 1.0
+  Exposure Time    : 29999.0
+  Gain             : 1.0
+  Test Pattern     : 0
+  Region 0 Mode   : 1
+  Region 0 Offset : 1906
+  Region 1 Mode   : 1
+  Region 1 Offset : 2372
+  Region 2 Mode   : 1
+  Region 2 Offset : 2838
+  Region 3 Mode   : 1
+  Region 3 Offset : 3304
+  Region 4 Mode   : 1
+  Region 4 Offset : 3770
+  Region 5 Mode   : 1
+  Region 5 Offset : 4236
+  Region 6 Mode   : 1
+  Region 6 Offset : 4702
+Passed Variables for settings:
+Width = 9344
+Height = 384
+AcquisitionFrameRate = 1.000000
+ExposureTime = 29999.000000
+Gain = 1.000000
+TestPattern = 0
+Region0Mode = 1
+Region1Mode = 1
+Region2Mode = 1
+Region3Mode = 1
+Region4Mode = 1
+Region5Mode = 1
+Region6Mode = 1
+Region0OffsetY = 1906
+Region1OffsetY = 2372
+Region2OffsetY = 2838
+Region3OffsetY = 3304
+Region4OffsetY = 3770
+Region5OffsetY = 4236
+Region6OffsetY = 4702
+Band-0 Project...
+Stream 1 successfully deleted
+Stream 2 successfully deleted
+Stream 3 successfully deleted
+Stream 4 successfully deleted
+Stream 5 successfully deleted
+Stream 6 successfully deleted
+Select and open grabber:
+[0] Vislinx-M PCIe Camera on PCI slot {1:0:0}: Protocol 0xFFFF, Generation 2
+[1] KAYA Software Grabber Emulator: CoaXPress (virtual) on PCI slot {10000:10000:10000}: Protocol 0x0, Generation 1
+Selected grabber #0
+Good connection to grabber #0, m_FgHandles=10000
+Grabber #0, KY_STREAM_BUFFER_INFO_IMAGEID not supported
+
+Press [d] to detect cameras
+Number of cameras connected to the PCI device #0: 1
+
+Select and connect camera:
+[0] VisLinxM: Firmware 2.2.2-2025.5.4
+Camera #0 was connected successfully
+QObject::setParent: Cannot set parent, new parent is in a different thread
+QBackingStore::endPaint() called with active painter; did you forget to destroy it or call QPainter::end() on it?
+QBackingStore::endPaint() called with active painter; did you forget to destroy it or call QPainter::end() on it?
+Started polling camera temperature and Grabber temperature
+ChunkModeActive is set to false
+Updated Variables after settings:
+Updated Variables:
+  Frame Width      : 9344
+  Frame Height     : 2688
+  Frame Rate       : 1.0
+  Exposure Time    : 29997.376953
+  Gain             : 1.0
+  Test Pattern     : 0
+  Region 0 Mode   : 1
+  Region 0 Offset : 1906
+  Region 1 Mode   : 1
+  Region 1 Offset : 2372
+  Region 2 Mode   : 1
+  Region 2 Offset : 2838
+  Region 3 Mode   : 1
+  Region 3 Offset : 3304
+  Region 4 Mode   : 1
+  Region 4 Offset : 3770
+  Region 5 Mode   : 1
+  Region 5 Offset : 4236
+  Region 6 Mode   : 1
+  Region 6 Offset : 4702
+Read- Width: 9344, Height: 2688, Framesize: 31395840
+QObject: Cannot create children for a parent that is in a different thread.
+(Parent is VideoModeHandler(0x2409dc60), parent's thread is QThread(0x22bbd270), current thread is QThread(0x716b48001cf0)
+
+Select option:
+[s] Start stream
+[v] CXP events on
+[h] Heartbeats on
+[f] Generate SIGFPE signal (Division by zero)
+[a] Generate SIGABRT signal (call abort() func)
+[e] Exit
+[Stream] Started.
+
+Select option:
+[s] Stop stream
+[v] CXP events on
+[h] Heartbeats on
+[f] Generate SIGFPE signal (Division by zero)
+[a] Generate SIGABRT signal (call abort() func)
+[e] Exit
+Good callback stream's buffer handle:1010100000000, ID:0 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000001, ID:1 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000002, ID:2 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000C, ID:12 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000D, ID:13 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000E, ID:14 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000F, ID:15 Bytes Written= 31395840
+Bytes Written= 31395840
+Bytes Written= 31395840
+Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000C, ID:12 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000D, ID:13 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000E, ID:14 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000F, ID:15 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000000, ID:0 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000001, ID:1 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000002, ID:2 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000C, ID:12 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000D, ID:13 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000E, ID:14 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000F, ID:15 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000000, ID:0 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000001, ID:1 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000002, ID:2 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000C, ID:12 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000D, ID:13 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000E, ID:14 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000F, ID:15 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000000, ID:0 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000001, ID:1 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000002, ID:2 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000C, ID:12 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000D, ID:13 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000E, ID:14 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000F, ID:15 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000000, ID:0 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000001, ID:1 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000002, ID:2 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000C, ID:12 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000D, ID:13 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000E, ID:14 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000F, ID:15 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000000, ID:0 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000001, ID:1 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000002, ID:2 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000003, ID:3 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000004, ID:4 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000005, ID:5 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000006, ID:6 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000007, ID:7 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000008, ID:8 Bytes Written= 31395840
+Good callback stream's buffer handle:1010100000009, ID:9 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000A, ID:10 Bytes Written= 31395840
+Good callback stream's buffer handle:101010000000B, ID:11 Bytes Written= 31395840
+

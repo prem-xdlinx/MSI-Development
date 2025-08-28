@@ -228,17 +228,27 @@ int startMSIApp(int argc, char *argv[])
         transferLogOnExit();
 #endif
         MSIAPP = false;
+        if (GrabberThread.joinable()){
+            g_terminate = true;
+            g_cv.notify_all(); // Just in case no signal was sent
+            GrabberThread.join(); // Wait for the Grabber status thread to finish
+        }
         return 1;
     }
 
     bool timeStatus = KayaUI.readInput(argc, argv);
     if(!timeStatus)
     {
-        PRINT_LOG("[E02]", "Invalid Time Difference. Exiting..."<<endl);
+        PRINT_LOG("[E02]", "Invalid Time Difference. Capture Time has elapsed. Exiting..."<<endl);
 #ifdef PRINT_FILE
     transferLogOnExit();
 #endif
         MSIAPP = false;
+        if (GrabberThread.joinable()){
+            g_terminate = true;
+            g_cv.notify_all(); // Just in case no signal was sent
+            GrabberThread.join(); // Wait for the Grabber status thread to finish
+        }
         return 1;
     }
     // std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -295,7 +305,12 @@ int startMSIApp(int argc, char *argv[])
                 transferLogOnExit();
 #endif
                 MSIAPP = false;
-                return 0;
+                if (GrabberThread.joinable()){
+                    g_terminate = true;
+                    g_cv.notify_all(); // Just in case no signal was sent
+                    GrabberThread.join(); // Wait for the Grabber status thread to finish
+                }
+                return 1;
             }
         }
                

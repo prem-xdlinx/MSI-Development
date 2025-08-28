@@ -1,0 +1,48 @@
+<schemalist>
+  <enum id="org.gnome.bijiben.BjbTextSizeType">
+    <value nick="large" value="0"/>
+    <value nick="medium" value="1"/>
+    <value nick="small" value="2"/>
+  </enum>
+  <schema path="/org/gnome/bijiben/" id="org.gnome.Notes" gettext-domain="bijiben">
+    <key type="s" name="font">
+      <default>'Cantarell 14'</default>
+      <summary>Custom Font</summary>
+      <description>The font name set here will be used as the font when displaying notes.</description>
+    </key>
+    <key type="b" name="use-system-font">
+      <default>true</default>
+      <summary>Whether to use the system monospace font</summary>
+    </key>
+    <key type="s" name="color">
+      <default>'rgb(153,193,241)'</default>
+      <summary>New notes color.</summary>
+      <description>The color name set here will be used as the color when creating new notes.</description>
+    </key>
+    <key type="s" name="default-location">
+      <default>'local'</default>
+      <summary>Primary notes provider to use for new notes.</summary>
+      <description>The primary notebook is the place where new notes are created.</description>
+    </key>
+    <key name="window-maximized" type="b">
+      <default>false</default>
+      <summary>Window maximized</summary>
+      <description>Window maximized state.</description>
+    </key>
+    <key name="window-size" type="(ii)">
+       <default>(800, 600)</default>
+       <summary>Window size</summary>
+       <description>Window size (width and height).</description>
+    </key>
+    <key name="window-position" type="(ii)">
+      <default>(-1, -1)</default>
+      <summary>Window position</summary>
+      <description>Window position (x and y).</description>
+    </key>
+    <key name="text-size" enum="org.gnome.bijiben.BjbTextSizeType">
+      <summary>Text size used by note editor.</summary>
+      <description>There are three text sizes available: small, medium (default) and large.</description>
+      <default>'medium'</default>
+    </key>
+  </schema>
+</schemalist>

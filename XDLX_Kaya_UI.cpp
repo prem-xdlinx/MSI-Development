@@ -230,9 +230,13 @@ bool UI::readInput(int& argc, char**& argv){
 		convertUI2Arg(parameter, argc, argv);//Convert String to Argument
 	}
 	G_TotArg= argc;
+	if(G_TotArg>0) G_OrbitNo = atoi(argv[1]);
+	std::cout<<"G_OrbitNo: "<<G_OrbitNo<<std::endl;
+	if(G_TotArg>1) G_Task= atoi(argv[2]);
+	std::cout<<"G_Task: "<<G_Task<<std::endl;
 	if(G_TotArg>4) PackDateTime(argv[4], argv[5], &G_Time);
 	msec= TimeDifferenceUpdated(&G_Time, 1);
-	msec = 7000; // For testing purposes, we set msec to 7
+	// msec = 7000; // For testing purposes, we set msec to 7
 	if((msec<= MIN_TIME_TH_MSEC ) || (msec> MAX_TIME_TH_MSEC ))
 	{
 		PRINT_LOG("[E]", "Invalid Time Difference: "<<msec<<" msec. It should be between "<<MIN_TIME_TH_MSEC<<" and "<<MAX_TIME_TH_MSEC<<".\n");
@@ -248,8 +252,8 @@ void UI::ProcessInput(int& argc, char**& argv, MetaSet &MetaConfig){
 	// 	convertUI2Arg(parameter, argc, argv);//Convert String to Argument
 	// }
 	// G_TotArg= argc;	
-	if(G_TotArg>0) G_OrbitNo = atoi(argv[1]);
-	if(G_TotArg>1) G_Task= atoi(argv[2]);
+	// if(G_TotArg>0) G_OrbitNo = atoi(argv[1]);
+	// if(G_TotArg>1) G_Task= atoi(argv[2]);
 	if(G_TotArg>2) G_JSON= atoi(argv[3]);
 	// if(G_TotArg>4) PackDateTime(argv[4], argv[5], &G_Time);
 	if(G_TotArg>5)
