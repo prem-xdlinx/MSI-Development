@@ -83,11 +83,11 @@ int64_t TimeDifference(std::chrono::system_clock::time_point cc, bool PrintFlag)
 		std::time_t now_tm = std::chrono::system_clock::to_time_t(now);// convert back to std::time_t
 		if(PrintFlag) 
 		{
-			PRINT_LOG("", "UTC Trigger Time: ");
+			PRINT_LOG("[I25]", "UTC Trigger Time: ");
 			PRINT_LOG("", std::put_time(std::localtime(&event_tm), "%F %T") << std::endl);
-			PRINT_LOG("", "System Time Now: ");
+			PRINT_LOG("[I26]", "System Time Now: ");
 			PRINT_LOG("", std::put_time(std::localtime(&now_tm), "%F %T") << std::endl);
-			PRINT_LOG("", "Waiting Time= "<<seconds<<" sec"<<std::endl);
+			PRINT_LOG("[I27]", "Waiting Time= "<<seconds<<" sec"<<std::endl);
 		}
 		return seconds;
 	}
@@ -231,15 +231,15 @@ bool UI::readInput(int& argc, char**& argv){
 	}
 	G_TotArg= argc;
 	if(G_TotArg>0) G_OrbitNo = atoi(argv[1]);
-	std::cout<<"G_OrbitNo: "<<G_OrbitNo<<std::endl;
+	// std::cout<<"G_OrbitNo: "<<G_OrbitNo<<std::endl;
 	if(G_TotArg>1) G_Task= atoi(argv[2]);
-	std::cout<<"G_Task: "<<G_Task<<std::endl;
+	// std::cout<<"G_Task: "<<G_Task<<std::endl;
 	if(G_TotArg>4) PackDateTime(argv[4], argv[5], &G_Time);
 	msec= TimeDifferenceUpdated(&G_Time, 1);
-	// msec = 7000; // For testing purposes, we set msec to 7
+	msec = 7000; // For testing purposes, we set msec to 7
 	if((msec<= MIN_TIME_TH_MSEC ) || (msec> MAX_TIME_TH_MSEC ))
 	{
-		PRINT_LOG("[E]", "Invalid Time Difference: "<<msec<<" msec. It should be between "<<MIN_TIME_TH_MSEC<<" and "<<MAX_TIME_TH_MSEC<<".\n");
+		PRINT_LOG("[E54]", "Invalid Time Difference: "<<msec<<" msec. It should be between "<<MIN_TIME_TH_MSEC<<" and "<<MAX_TIME_TH_MSEC<<".\n");
 		return false;
 	}
 	return true;

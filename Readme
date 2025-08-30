@@ -12,3 +12,14 @@ This Version of code contains The telemetry send to SatOs.
 ---> Added firmware version in hardware info
 ---> Packs Device Temp and Sensor Temp at Parameters place. 
 ----> Introduced flag MASIAPP to track sigseg logging
+
+
+
+
+
+
+
+
+
+
+

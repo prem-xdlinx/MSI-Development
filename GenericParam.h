@@ -56,7 +56,7 @@ using namespace std;
 
 #define TIME
 #define BINNING
-#define PRINT_FILE
+// #define PRINT_FILE
 #define TDIYSHIFT
 #define ERRORCODE
 #define CONTENT
@@ -369,6 +369,7 @@ struct FileParam
     METADATA_CHUNKS metadataChunks;
     int  framedrops = 0;
     CAMHANDLE CamHandle;
+    uint64_t iFrames = 0;
 };
 
 extern FileParam Param; //[7];

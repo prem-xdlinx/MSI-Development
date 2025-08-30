@@ -14,7 +14,7 @@ void ProcessHeartbeatEvent(KYDEVICE_EVENT_CXP2_HEARTBEAT* pEventHeartbeat)
         return;
     }
    
-    PRINT_LOG("", "Received KYDEVICE_EVENT_CXP2_HEARTBEAT: cameraTime=" << pEventHeartbeat->heartBeat.cameraTime << "\n");
+    PRINT_LOG("[I92]", "Received KYDEVICE_EVENT_CXP2_HEARTBEAT: cameraTime=" << pEventHeartbeat->heartBeat.cameraTime << "\n");
 
 }
 
@@ -25,7 +25,7 @@ void ProcessCxp2Event(KYDEVICE_EVENT_CXP2_EVENT* pEventCXP2Event)
         return;
     }
    
-    PRINT_LOG("", "Received KYDEVICE_EVENT_CXP2_EVENT: tag=0x" << std::hex << std::uppercase << static_cast<int>(pEventCXP2Event->cxp2Event.tag) << std::dec << "\n");
+    PRINT_LOG("[I93]", "Received KYDEVICE_EVENT_CXP2_EVENT: tag=0x" << std::hex << std::uppercase << static_cast<int>(pEventCXP2Event->cxp2Event.tag) << std::dec << "\n");
 }
 
 
@@ -124,18 +124,18 @@ bool Grabber::ConnectByID(int grabberIndex)
 {
     if(!(grabberIndex>=0 && grabberIndex<this->n)){
        
-        PRINT_LOG("", "Out of Range ID: " << grabberIndex << "\n");
+        PRINT_LOG("[E55]", "Out of Range ID: " << grabberIndex << "\n");
     }
 
     if (FGSTATUS_OK != this->flags[grabberIndex])//KY_DeviceInfo(grabberIndex, &(this->Infos[grabberIndex])))
     {
        
-        PRINT_LOG("", "wasn't able to retrive information from device #" << grabberIndex << "\n");
+        PRINT_LOG("[E56]", "wasn't able to retrive information from device #" << grabberIndex << "\n");
         return false;
     }
     else{
        
-        PRINT_LOG("", "Grabber[" << grabberIndex << "]: " << this->Infos[grabberIndex].szDeviceDisplayName
+        PRINT_LOG("[I94]", "Grabber[" << grabberIndex << "]: " << this->Infos[grabberIndex].szDeviceDisplayName
           << " on PCI slot {" << this->Infos[grabberIndex].nBus << ":" << this->Infos[grabberIndex].nSlot << ":" << this->Infos[grabberIndex].nFunction
           << "}: Protocol 0x" << std::hex << std::uppercase << this->Infos[grabberIndex].m_Protocol
           << std::dec << ", Generation " << this->Infos[grabberIndex].DeviceGeneration << "\n");
@@ -144,7 +144,7 @@ bool Grabber::ConnectByID(int grabberIndex)
     if (0 == (KY_DEVICE_STREAM_GRABBER & this->Infos[grabberIndex].m_Flags))
     {
        
-        PRINT_LOG("", "Selected device #" << grabberIndex << " is not a grabber\n");
+        PRINT_LOG("[I95]", "Selected device #" << grabberIndex << " is not a grabber\n");
         return false;
     }
 
@@ -152,13 +152,13 @@ bool Grabber::ConnectByID(int grabberIndex)
     this->Handle = KYFG_Open(grabberIndex);
     if (this->Handle != INVALID_FGHANDLE){
        
-        PRINT_LOG("", "Good connection to grabber #" << grabberIndex << ", FgHandles=0x" << std::hex << std::uppercase << this->Handle << std::dec << "\n");
+        PRINT_LOG("[I96]", "Good connection to grabber #" << grabberIndex << ", FgHandles=0x" << std::hex << std::uppercase << this->Handle << std::dec << "\n");
         latestTelemetry.cameraInfo.cameraStatus = 1;
         latestTelemetry.cameraInfo.GrabberStatus = 2; // Connected
     }
     else{
        
-        PRINT_LOG("", "Could not connect to grabber #" << grabberIndex << "\n");
+        PRINT_LOG("[E57]", "Could not connect to grabber #" << grabberIndex << "\n");
         return false;
     }
                 
@@ -167,7 +167,7 @@ bool Grabber::ConnectByID(int grabberIndex)
     if (1 != dmaQueuedBufferCapable)
     {
        
-        PRINT_LOG("", "grabber #" << grabberIndex << " does not support queued buffers\n");
+        PRINT_LOG("[E58]", "grabber #" << grabberIndex << " does not support queued buffers\n");
         return false;
     }
 
@@ -179,9 +179,9 @@ bool Grabber::ConnectByID(int grabberIndex)
     // OPTIONALY register grabber's event callback function
    
     if (FGSTATUS_OK != KYDeviceEventCallBackRegister(this->Handle, KYDeviceEventCallBackImpl, 0))
-        PRINT_LOG("", "Warning: KYDeviceEventCallBackRegister() failed\n");
+        PRINT_LOG("[E59]", "Warning: KYDeviceEventCallBackRegister() failed\n");
     else
-        PRINT_LOG("", "KYDeviceEventCallBackImpl() registered \n");//, enter 'v' to turn event prints on and off\n");
+        PRINT_LOG("[I97]", "KYDeviceEventCallBackImpl() registered \n");//, enter 'v' to turn event prints on and off\n");
         
     //Grabber is ok to continue
     this->ID= grabberIndex;
@@ -222,15 +222,15 @@ void Grabber::getHardwareInfo(FGHANDLE fgHandle){
     char* pvalue_str = (char*)malloc(stringSize); // allocate memory for string
     // 3. retrieve copy of string:
     KYFG_GetGrabberValueStringCopy(fgHandle, "DeviceFirmwareVersion", pvalue_str, &stringSize);
-    PRINT_LOG("", "Device Firmware Version: "<<pvalue_str<<endl);
+    PRINT_LOG("[I98]", "Device Firmware Version: "<<pvalue_str<<endl);
 
     int coreTemp = KYFG_GetGrabberValueInt(fgHandle, "DeviceTemperature");
-    PRINT_LOG("", "Device Core Temperature: "<<coreTemp<<endl);
+    PRINT_LOG("[I99]", "Device Core Temperature: "<<coreTemp<<endl);
     int PciGen = KYFG_GetGrabberValueInt(fgHandle, "DevicePciGeneration");
-    PRINT_LOG("", "Detected Device Pci Generation: "<<PciGen<<endl);
+    PRINT_LOG("[I100]", "Detected Device Pci Generation: "<<PciGen<<endl);
    
     int PciLanes = KYFG_GetGrabberValueInt(fgHandle, "DevicePciLanes");
-    PRINT_LOG("", "Detected Device Pci Lanes: "<<PciLanes<<endl);
+    PRINT_LOG("[I101]", "Detected Device Pci Lanes: "<<PciLanes<<endl);
 
 }   
 

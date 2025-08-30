@@ -209,7 +209,10 @@ void Stream_callback_func(STREAM_BUFFER_HANDLE streamBufferHandle, void *userCon
 {
     char *pFrameMemory = 0;
     uint32_t frameId = 0;
-    static uint64_t iFrames = 0;
+    // static uint64_t iFrames = 0;
+    // if(MSIAPP){
+        // iFrames = 0;
+    // }
     size_t bufferSize = 0;
 #ifndef MINIMAL_CALLBACK
     uint64_t timeStamp;
@@ -230,11 +233,11 @@ void Stream_callback_func(STREAM_BUFFER_HANDLE streamBufferHandle, void *userCon
 #ifndef MINIMAL_CALLBACK
     KYFG_BufferGetInfo(streamBufferHandle, KY_STREAM_BUFFER_INFO_ID, &frameId, NULL, NULL);
     // KYFG_BufferGetInfo(streamBufferHandle, KY_STREAM_BUFFER_INFO_USER_PTR, &pUserContext, NULL, NULL);
-    KYFG_BufferGetInfo(streamBufferHandle, KY_STREAM_BUFFER_INFO_TIMESTAMP, &timeStamp, NULL, NULL);
+    // KYFG_BufferGetInfo(streamBufferHandle, KY_STREAM_BUFFER_INFO_TIMESTAMP, &timeStamp, NULL, NULL);
     KYFG_BufferGetInfo(streamBufferHandle, KY_STREAM_BUFFER_INFO_INSTANTFPS, &instantFps, NULL, NULL);
 
 #endif
-    PRINT_LOG("", "FrameNo=" << std::setw(4) << std::setfill(' ') << iFrames++ << "(BufNo=" << std::setw(2) << std::setfill('0') << frameId << "), timeStamp= " << timeStamp << ", instantFps=" << instantFps<<", BufferSize=" << bufferSize);
+    PRINT_LOG("", "FrameNo=" << std::setw(4) << std::setfill(' ') << Param.iFrames++ << "(BufNo=" << std::setw(2) << std::setfill('0') << frameId << "), instantFps=" << instantFps<<", BufferSize=" << bufferSize);
 
     int64_t nBytes = CaptureImageMap(pFrameMemory, bufferSize);
     KYFG_BufferToQueue(streamBufferHandle, KY_ACQ_QUEUE_INPUT);
@@ -449,6 +452,10 @@ void Stream::DeleteStreamMap(CAMHANDLE camHandle, int CamID)
         PRINT_LOG("[E37]", "Error: Less data aquired with file size: " << Param.file_size << endl);
     }
     PRINT_LOG("", "No.of Framedrops: " << Param.framedrops << endl);
+    Param.framedrops = 0;
+    Param.lastTimestamp = 0;
+    Param.TimeDifference = 0;
+    Param.iFrames = 0;
 
 #ifdef METAFILE
     if(Param.fpMeta != NULL){
@@ -1034,7 +1041,7 @@ void Stream::transferFile(const std::string& logPath)
         std::cout<< "No captures and folder path is empty" << endl;
         time_t now = time(NULL);
         struct tm *t = localtime(&now);
-
+        // std::cout<<"From TransferFile function: G_Task - "<<G_Task<<std::endl;
         sprintf(CurrentFolder, "%sAcq%06d_%02d%02d%02d%02d%02d%04d/", acquisitionPath.c_str(), G_Task, t->tm_sec, t->tm_min, t->tm_hour, t->tm_mday, t->tm_mon + 1, t->tm_year + 1900);
         if (mkdir(CurrentFolder, 0777) == -1)
         {
@@ -1086,4 +1093,5 @@ void Stream::transferFile(const std::string& logPath)
 
         std::cout<< "Error: " << e.what() << '\n';
     }
+    folder.clear();
 }

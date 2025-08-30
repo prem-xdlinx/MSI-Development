@@ -171,12 +171,14 @@ void CheckGrabberStatus(int interval) {
     }
 
     if (latestTelemetry.cameraInfo.GrabberStatus == 1) {
-        PRINT_LOG("", "Grabber is not connected after " << interval << "(sec) of grace time. Exiting from Capture Sequence." << std::endl);
+        PRINT_LOG("[E52]", "Grabber is not connected after " << interval << "(sec) of grace time. Exiting from Capture Sequence." << std::endl);
+        Grabber KayaGrabber;
+        KayaGrabber.Close();
         transferLogOnExit();
         MSIAPP = false;
         std::exit(0);
     } else if (latestTelemetry.cameraInfo.GrabberStatus == 2) {
-        PRINT_LOG("", "Grabber connected successfully." << std::endl);
+        // PRINT_LOG("", "Grabber connected successfully." << std::endl);
     }
 }
 
@@ -272,9 +274,9 @@ int startMSIApp(int argc, char *argv[])
         CAMHANDLE CamHandle = Vislink.Handle(0);
         bool pollStatus = telemetry.initialize(fgHandle, CamHandle);
         if(pollStatus){
-            PRINT_LOG("", "Telemetry initialized successfully." << std::endl);
+            PRINT_LOG("[I91]", "Telemetry initialized successfully." << std::endl);
         }else{
-            PRINT_LOG("", "Telemetry initialization failed." << std::endl);
+            PRINT_LOG("[E53]", "Telemetry initialization failed." << std::endl);
         }
         commonParams.CoreTemperature = KYFG_GetGrabberValueInt(fgHandle, "DeviceTemperature");
         PRINT_LOG("[I87]", "Device Core Temperature: "<<commonParams.CoreTemperature<<endl);
