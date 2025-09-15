@@ -3,7 +3,7 @@ This Version of code contains The telemetry send to SatOs.
 2) Device Status,   ----> 16bits = Duration   -----> 16bits = Device Status
 3) Sensor Temparature,
 4) Device Temperature,
-5) Camera Status --- >  16bits = Grabber Status --->14bits = FramesCaptured(0-16383) ------->  2bits = CameraStatus( 0 = Fault, 1 = Ready, 2 = Waiting, 3 = Capturing)
+5) Camera Status --- >  16bits = Grabber Status( 1-Not connected, 2 - Connected )  --->14bits = FramesCaptured(0-16383) ------->  2bits = CameraStatus( 0 = Fault, 1 = Ready, 2 = Waiting, 3 = Capturing)
 6) Storage Status ---->  16bits = Seconds Counter -----> 14bits = StorageStatus(0-16383)  ----> 2bits = Payload SeqID  
 7) Voltage
 
